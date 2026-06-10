@@ -128,6 +128,59 @@ a{color:inherit;text-decoration:none;}
   animation:pulse 2s infinite;
 }
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+@keyframes dotPulse{0%,80%,100%{opacity:0;transform:scale(.6)}40%{opacity:1;transform:scale(1)}}
+
+/* Agent Modal Messages */
+.am-msg-user{
+  align-self:flex-end;max-width:78%;
+  background:rgba(201,168,76,.12);
+  border:1px solid rgba(201,168,76,.25);
+  color:#f5f0e8;padding:13px 18px;border-radius:16px 16px 4px 16px;
+  font-size:13.5px;line-height:1.75;
+  animation:slideUp .2s ease;
+}
+.am-msg-agent{
+  align-self:flex-start;max-width:84%;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  color:#d4cfc8;padding:14px 18px;border-radius:4px 16px 16px 16px;
+  font-size:13.5px;line-height:1.85;
+  animation:slideUp .2s ease;
+  white-space:pre-wrap;
+}
+.am-msg-agent strong{color:#C9A84C;}
+.am-msg-agent em{color:#d4cfc8;font-style:italic;}
+.am-msg-agent code{background:rgba(201,168,76,.1);padding:2px 6px;border-radius:4px;font-size:12px;color:#C9A84C;}
+.am-agent-label{
+  display:flex;align-items:center;gap:6px;margin-bottom:6px;
+}
+.am-agent-label-name{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);}
+.am-typing-dots span{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.3);margin:0 2px;
+  animation:dotPulse 1.4s infinite ease-in-out;
+}
+.am-typing-dots span:nth-child(2){animation-delay:.2s;}
+.am-typing-dots span:nth-child(3){animation-delay:.4s;}
+.am-qprompt{
+  font-size:11px;padding:5px 12px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.45);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+  background:rgba(255,255,255,.03);
+}
+.am-qprompt:hover{border-color:rgba(201,168,76,.4);color:rgba(201,168,76,.9);background:rgba(201,168,76,.06);}
+#am-send:hover{background:rgba(201,168,76,.25);border-color:rgba(201,168,76,.5);}
+#am-input:focus{border-color:rgba(201,168,76,.3);background:rgba(255,255,255,.06);}
+.am-no-key{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;gap:12px;padding:40px;text-align:center;
+}
+.am-no-key-icon{font-size:40px;opacity:.5;}
+.am-no-key-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:#f5f0e8;}
+.am-no-key-text{font-size:13px;color:rgba(255,255,255,.35);line-height:1.7;max-width:340px;}
 
 /* ── SECTIONS ── */
 .section{display:none;}
@@ -1813,6 +1866,75 @@ a{color:inherit;text-decoration:none;}
 
 </main>
 
+<!-- ═══════════════════════════════════════════════════════════
+     AGENT CHAT MODAL — full-screen, Claude API powered
+════════════════════════════════════════════════════════════ -->
+<div id="agent-modal" style="
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(12px);
+  animation:fadeIn .2s ease;
+" onclick="if(event.target===this)closeAgentModal()">
+  <div id="agent-modal-inner" style="
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    max-width:800px;width:100%;margin:auto;
+    background:#0e0e12;border-left:1px solid rgba(255,255,255,.06);
+    border-right:1px solid rgba(255,255,255,.06);
+  ">
+    <!-- Header -->
+    <div id="am-header" style="
+      display:flex;align-items:center;gap:14px;padding:18px 24px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      background:rgba(0,0,0,.3);flex-shrink:0;
+    ">
+      <div id="am-avatar" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div id="am-name" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#f5f0e8;letter-spacing:.3px;"></div>
+        <div id="am-role" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:1px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="am-status" style="font-size:11px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:6px;"></div>
+        <!-- API Key toggle -->
+        <button id="am-key-toggle" onclick="toggleApiKeyInput()" style="font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.35);cursor:pointer;letter-spacing:.5px;">API Key</button>
+        <button onclick="clearAgentChat()" style="font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.35);cursor:pointer;letter-spacing:.5px;">Clear</button>
+        <button onclick="closeAgentModal()" style="font-size:18px;background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;line-height:1;padding:4px;">✕</button>
+      </div>
+    </div>
+    <!-- API Key Input (hidden by default) -->
+    <div id="am-key-row" style="display:none;padding:10px 24px;background:rgba(201,168,76,.06);border-bottom:1px solid rgba(201,168,76,.15);flex-shrink:0;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:11px;color:rgba(201,168,76,.8);letter-spacing:.5px;">Anthropic API Key:</span>
+      <input id="am-key-input" type="password" placeholder="sk-ant-..." style="flex:1;min-width:180px;padding:6px 12px;border-radius:8px;border:1px solid rgba(201,168,76,.3);background:rgba(0,0,0,.4);color:#f5f0e8;font-size:12px;outline:none;" />
+      <button onclick="saveApiKey()" style="padding:6px 14px;border-radius:8px;border:none;background:rgba(201,168,76,.2);color:rgba(201,168,76,.9);font-size:12px;cursor:pointer;letter-spacing:.5px;">Save</button>
+      <span style="font-size:10px;color:rgba(255,255,255,.25);">Stored locally in browser only.</span>
+    </div>
+    <!-- Quick prompts -->
+    <div id="am-prompts" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;"></div>
+    <!-- Chat messages -->
+    <div id="am-msgs" style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;"></div>
+    <!-- Typing indicator -->
+    <div id="am-typing" style="display:none;padding:0 24px 10px;font-size:12px;color:rgba(255,255,255,.3);font-style:italic;flex-shrink:0;"></div>
+    <!-- Input row -->
+    <div style="padding:16px 24px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;flex-shrink:0;background:rgba(0,0,0,.2);">
+      <textarea id="am-input" rows="2" placeholder="Ask anything…" style="
+        flex:1;padding:12px 16px;border-radius:12px;
+        border:1px solid rgba(255,255,255,.1);
+        background:rgba(255,255,255,.04);
+        color:#f5f0e8;font-size:13px;line-height:1.5;
+        resize:none;outline:none;font-family:'Inter',sans-serif;
+        transition:border-color .2s;
+      " onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendModalMsg();}"></textarea>
+      <button id="am-send" onclick="sendModalMsg()" style="
+        padding:0 20px;border-radius:12px;border:none;
+        background:rgba(201,168,76,.15);
+        color:rgba(201,168,76,.9);
+        font-size:13px;cursor:pointer;
+        letter-spacing:.5px;transition:all .2s;
+        border:1px solid rgba(201,168,76,.25);
+        white-space:nowrap;font-family:'Inter',sans-serif;
+      ">Send ↑</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const KEY = "veluera_biz_v1";
 let data = load();
@@ -2859,36 +2981,256 @@ function renderChatMsgs(agent) {
 }
 
 window.sendToAgent = function(text) {
-  const input = document.getElementById('chat-input');
-  if (input) input.value = text;
-  sendChat();
+  openAgentModal(activeAgentId, text);
 };
 
+// Keep legacy sendChat for the hub panel fallback
 function sendChat() {
   const input = document.getElementById('chat-input');
   const text = input ? input.value.trim() : '';
   if (!text) return;
-  const agent = AGENTS.find(a => a.id === activeAgentId);
-  if (!agent) return;
-
-  if (!data.agentMessages[agent.id]) data.agentMessages[agent.id] = JSON.parse(JSON.stringify(agent.messages));
-  data.agentMessages[agent.id].push({ from: 'user', text });
-  input.value = '';
-  save();
-  renderChatMsgs(agent);
-
-  // Generate response
-  setTimeout(() => {
-    const responses = AGENT_RESPONSES[agent.id] || ['I\'m on it. Give me a moment to pull that together for you.'];
-    const reply = responses[Math.floor(Math.random() * responses.length)];
-    data.agentMessages[agent.id].push({ from: 'agent', text: reply });
-    save();
-    renderChatMsgs(agent);
-  }, 800);
+  openAgentModal(activeAgentId, text);
+  if (input) input.value = '';
 }
-
 document.getElementById('chat-send')?.addEventListener('click', sendChat);
 document.getElementById('chat-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+// ══════════════════════════════════════════
+// AGENT MODAL — Claude API powered
+// ══════════════════════════════════════════
+
+const VELUERA_API_KEY = 'veluera_anthropic_key';
+let modalAgentId = null;
+let modalMsgs = []; // [{role:'user'|'assistant', content:'...'}]
+let modalStreaming = false;
+
+function getApiKey() { return localStorage.getItem(VELUERA_API_KEY) || ''; }
+
+window.saveApiKey = function() {
+  const val = document.getElementById('am-key-input')?.value.trim();
+  if (val) {
+    localStorage.setItem(VELUERA_API_KEY, val);
+    document.getElementById('am-key-row').style.display = 'none';
+    renderModalMessages();
+    showToast('✓ API key saved — your agents are now live');
+  }
+};
+
+window.toggleApiKeyInput = function() {
+  const row = document.getElementById('am-key-row');
+  if (!row) return;
+  const show = row.style.display === 'none';
+  row.style.display = show ? 'flex' : 'none';
+  if (show) {
+    const inp = document.getElementById('am-key-input');
+    if (inp) { inp.value = getApiKey(); inp.focus(); }
+  }
+};
+
+window.openAgentModal = function(agentId, prefillText) {
+  const agent = AGENTS.find(a => a.id === agentId);
+  if (!agent) return;
+  modalAgentId = agentId;
+
+  // Restore saved conversation or seed with agent's opening message
+  const saved = data.agentMessages[agentId];
+  if (saved && saved.length) {
+    modalMsgs = saved.filter(m => m.from !== 'agent' || !m._seed)
+      .map(m => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.text.replace(/<[^>]+>/g,' ').trim() }));
+  } else {
+    modalMsgs = [];
+  }
+
+  // Header
+  document.getElementById('am-avatar').style.cssText = `width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:${agent.bg};border:2px solid ${agent.color}55;`;
+  document.getElementById('am-avatar').textContent = agent.emoji;
+  document.getElementById('am-name').textContent = agent.name;
+  document.getElementById('am-role').textContent = agent.role;
+  document.getElementById('am-status').innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${agent.status==='working'?'#4CAF7A':agent.status==='thinking'?'#E0A84C':'#666'};display:inline-block;"></span> ${agent.status==='working'?'Working':'Available'}`;
+
+  // Header accent color
+  document.getElementById('am-header').style.borderBottom = `1px solid ${agent.color}22`;
+
+  // Quick prompts
+  document.getElementById('am-prompts').innerHTML = agent.prompts.map(p =>
+    `<span class="am-qprompt" onclick="sendModalPrompt('${p.replace(/'/g,"&#39;")}')">${p}</span>`
+  ).join('');
+
+  // Show modal
+  document.getElementById('agent-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+
+  renderModalMessages(agent);
+
+  // Prefill text
+  if (prefillText) {
+    const inp = document.getElementById('am-input');
+    if (inp) { inp.value = prefillText; inp.focus(); }
+  } else {
+    setTimeout(() => document.getElementById('am-input')?.focus(), 100);
+  }
+};
+
+window.closeAgentModal = function() {
+  document.getElementById('agent-modal').style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+window.clearAgentChat = function() {
+  modalMsgs = [];
+  if (modalAgentId) {
+    delete data.agentMessages[modalAgentId];
+    save();
+  }
+  const agent = AGENTS.find(a => a.id === modalAgentId);
+  renderModalMessages(agent);
+};
+
+window.sendModalPrompt = function(text) {
+  const inp = document.getElementById('am-input');
+  if (inp) inp.value = text;
+  sendModalMsg();
+};
+
+function renderModalMessages(agent) {
+  const container = document.getElementById('am-msgs');
+  if (!container) return;
+  const apiKey = getApiKey();
+
+  if (!apiKey) {
+    container.innerHTML = `
+      <div class="am-no-key">
+        <div class="am-no-key-icon">🔑</div>
+        <div class="am-no-key-title">Connect your API key</div>
+        <div class="am-no-key-text">Add your Anthropic API key to unlock real AI conversations with every Veluera agent. Your key is stored locally — never shared.</div>
+        <button onclick="toggleApiKeyInput()" style="padding:10px 24px;border-radius:10px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.1);color:rgba(201,168,76,.9);font-size:13px;cursor:pointer;margin-top:8px;">Add API Key →</button>
+      </div>`;
+    return;
+  }
+
+  // Show seed message if no conversation yet
+  const currentAgent = agent || AGENTS.find(a => a.id === modalAgentId);
+  const hasConvo = modalMsgs.length > 0;
+
+  container.innerHTML = '';
+
+  if (!hasConvo && currentAgent?.messages?.[0]) {
+    const seed = currentAgent.messages[0];
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div class="am-agent-label">
+        <span style="font-size:14px;">${currentAgent.emoji}</span>
+        <span class="am-agent-label-name">${currentAgent.name}</span>
+      </div>
+      <div class="am-msg-agent">${seed.text}</div>`;
+    container.appendChild(div);
+  }
+
+  modalMsgs.forEach(m => {
+    const wrap = document.createElement('div');
+    if (m.role === 'user') {
+      wrap.innerHTML = `<div class="am-msg-user">${m.content.replace(/\n/g,'<br>')}</div>`;
+    } else {
+      wrap.innerHTML = `
+        <div class="am-agent-label">
+          <span style="font-size:14px;">${currentAgent?.emoji||'✦'}</span>
+          <span class="am-agent-label-name">${currentAgent?.name||'Agent'}</span>
+        </div>
+        <div class="am-msg-agent">${formatAgentText(m.content)}</div>`;
+    }
+    container.appendChild(wrap);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatAgentText(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+window.sendModalMsg = async function() {
+  if (modalStreaming) return;
+  const inp = document.getElementById('am-input');
+  const text = inp?.value.trim();
+  if (!text) return;
+
+  const apiKey = getApiKey();
+  if (!apiKey) { toggleApiKeyInput(); return; }
+
+  const agent = AGENTS.find(a => a.id === modalAgentId);
+  if (!agent) return;
+
+  inp.value = '';
+  modalMsgs.push({ role: 'user', content: text });
+  renderModalMessages(agent);
+
+  // Show typing indicator
+  const typing = document.getElementById('am-typing');
+  if (typing) {
+    typing.style.display = 'block';
+    typing.innerHTML = `<span style="opacity:.5;font-size:11px;letter-spacing:.5px;">${agent.emoji} ${agent.name} is thinking</span> <span class="am-typing-dots"><span></span><span></span><span></span></span>`;
+  }
+  modalStreaming = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        system: agent.persona,
+        messages: modalMsgs
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+
+    const json = await res.json();
+    const reply = json.content?.[0]?.text || '';
+
+    modalMsgs.push({ role: 'assistant', content: reply });
+
+    // Persist to data
+    if (!data.agentMessages[agent.id]) data.agentMessages[agent.id] = [];
+    data.agentMessages[agent.id] = modalMsgs.map(m => ({
+      from: m.role === 'user' ? 'user' : 'agent',
+      text: m.content
+    }));
+    save();
+
+  } catch(err) {
+    modalMsgs.push({ role: 'assistant', content: `⚠️ ${err.message || 'Could not reach Claude API. Check your API key and try again.'}` });
+  }
+
+  if (typing) typing.style.display = 'none';
+  modalStreaming = false;
+  renderModalMessages(agent);
+};
+
+// Also open modal when clicking agents in the office (override goToAgent)
+const _origGoToAgent = window.goToAgent;
+window.goToAgent = function(id) {
+  openAgentModal(id);
+};
+
+// Keyboard shortcut: Escape to close
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAgentModal();
+});
 
 // ══════════════════════════════════════════
 // AD STUDIO — CONSENT QUEUE
