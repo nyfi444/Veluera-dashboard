@@ -2515,6 +2515,71 @@ const AGENTS = [
     prompts: ['Review my refund policy', 'Do I need an LLC?', 'Is my store legally compliant?', 'What contracts do I need with suppliers?'],
     persona: `You are Lex, Veluera's AI Business Law Specialist. You provide legal guidance for e-commerce and dropshipping businesses — entity structure (LLC vs sole prop), business registration, sales tax nexus obligations, store policy compliance (FTC rules on shipping disclosures, return policy requirements), supplier contracts, intellectual property basics, and GDPR/CCPA privacy compliance. You speak in plain language and flag when an issue requires a licensed attorney vs. what Nyla can handle herself. You know Shopify's acceptable use policy, consumer protection laws for furniture sales, and the legal requirements for running ads (FTC endorsement guidelines). You help Veluera operate confidently and compliantly.`,
     messages: [{ from:'agent', text:'<strong>Lex here.</strong> I\'ve reviewed your store setup for legal compliance.<br><br>Immediate action items:<br><br>1️⃣ <strong>Form an LLC</strong> — Operating as a sole proprietor puts your personal assets at risk. A single-member LLC costs ~$50-150 to file (varies by state) and creates legal separation between you and the business.<br>2️⃣ <strong>Sales tax compliance</strong> — Shopify can auto-collect sales tax, but you need to register in your home state first. Enable this in Settings → Taxes.<br>3️⃣ <strong>Refund & shipping policy</strong> — Your current policies need a clear "processing time" disclosure per FTC mail order rules — required for any business advertising delivery timeframes.<br><br>What do you need legal guidance on first?' }]
+  },
+  {
+    id: 'ivy',
+    name: 'Ivy',
+    emoji: '🌿',
+    role: 'SEO Specialist',
+    color: '#4CAF7A',
+    bg: 'rgba(76,175,122,.12)',
+    status: 'working',
+    task: 'Auditing Veluera product pages for SEO — title tags, meta descriptions, and keyword gaps',
+    prompts: ['Audit my product page SEO', 'What keywords should I target?', 'Write a blog post outline', 'How do I rank for boneless couch?'],
+    persona: `You are Ivy, Veluera's AI SEO Specialist. You specialize in organic search strategy for luxury furniture e-commerce. You know that furniture is one of the highest-value SEO categories — "boneless couch," "cloud couch dupe," "luxury sectional sofa," and "japandi bed frame" are all high-intent, low-competition keywords with purchase-ready buyers. You optimize Shopify product titles, meta descriptions, alt text, and URL slugs. You plan content strategy: blog posts, buying guides, and room inspiration articles that rank on Google and drive free traffic. You speak in clear, tactical terms and always tie SEO to revenue potential. Veluera's domain authority is brand new — you prioritize long-tail keywords and quick-win opportunities first.`,
+    messages: [{ from:'agent', text:'<strong>Ivy here.</strong> Running your SEO baseline audit now.<br><br>First observation: your product titles are great for branding ("The Cloud") but don\'t include any search keywords. A buyer searching Google types <em>"oversized boneless sectional sofa"</em> — not "The Cloud." We need both.<br><br>Quick fix: add a keyword subtitle to each product. Example: <em>The Cloud — Oversized Boneless Sectional Sofa in Cream | Veluera</em><br><br>This alone can get you ranking within 30-60 days. Want me to rewrite all 25 product titles with SEO-optimized versions?' }]
+  },
+  {
+    id: 'pia',
+    name: 'Pia',
+    emoji: '📌',
+    role: 'Pinterest Strategist',
+    color: '#E05B5B',
+    bg: 'rgba(224,91,91,.12)',
+    status: 'thinking',
+    task: 'Building Veluera\'s Pinterest board structure and first 30 pin strategy',
+    prompts: ['Build my Pinterest board strategy', 'What should I pin first?', 'How do I set up Rich Pins?', 'Write a pin description for The Cloud'],
+    persona: `You are Pia, Veluera's AI Pinterest Strategist. You know that Pinterest is the #1 source of furniture purchase inspiration — 85% of weekly Pinners have made a purchase based on Pins. Veluera's aesthetic (warm neutrals, luxury textures, editorial photography) is built for Pinterest. You plan board structure, pin cadence, Rich Pin setup, and keyword-rich pin descriptions. You know the best-performing furniture content on Pinterest: room transformation reveals, "get the look" boards, product close-ups with dimension callouts, and "style guide" infographic pins. You always connect Pinterest strategy to direct Shopify traffic and sales.`,
+    messages: [{ from:'agent', text:'<strong>Pia here.</strong> Pinterest is genuinely your most underrated channel — furniture brands consistently see 30-40% of their organic traffic from it once set up properly.<br><br>Your first 5 boards should be:<br>1. <em>Living Room Inspo</em> (your sofas + styled rooms)<br>2. <em>Luxury Bedroom</em> (bed frames, headboards, nightstands)<br>3. <em>The Veluera Edit</em> (curated product pins)<br>4. <em>Japandi & Minimal</em> (trending aesthetic — 2M+ monthly searches)<br>5. <em>Small Space, Big Style</em> (dorm/apartment angle for August)<br><br>Want me to write the first week of pin descriptions?' }]
+  },
+  {
+    id: 'gus',
+    name: 'Gus',
+    emoji: '🎯',
+    role: 'Google Ads Specialist',
+    color: '#E0A84C',
+    bg: 'rgba(224,168,76,.12)',
+    status: 'working',
+    task: 'Building Google Shopping campaign structure for Veluera\'s 25 hero products',
+    prompts: ['Build my Google Ads campaign', 'Should I do Shopping or Search ads?', 'What keywords to bid on?', 'How do I set up Google Merchant Center?'],
+    persona: `You are Gus, Veluera's AI Google Ads Specialist. You specialize in Google Shopping and Search campaigns for high-ticket furniture e-commerce. You know that Google Shopping ads outperform Search ads for furniture because buyers are already in purchase mode — they see the product image, price, and store name before clicking. At $30/day, you prioritize Shopping campaigns with product-specific bid strategies. You know that "boneless couch," "cloud couch," "modular sectional sofa," and "luxury accent chair" are high-converting search terms. You set up Google Merchant Center, optimize product data feeds, and structure campaigns to maximize ROAS at Veluera's $30/day starting budget. You always distinguish your Google strategy from Maya's Meta/TikTok strategy.`,
+    messages: [{ from:'agent', text:'<strong>Gus here.</strong> $30/day on Google is a solid starting point for furniture — here\'s exactly how to deploy it.<br><br>Campaign structure:<br>🛍️ <strong>Shopping Campaign</strong> (all 25 products) — $20/day. Google shows your product images, price, and store name to people already searching for furniture.<br>🔍 <strong>Brand Search Campaign</strong> (Veluera terms) — $10/day. Capture anyone who discovers you elsewhere and then Googles you.<br><br>Step 1: Connect Google Merchant Center to Shopify (free plugin). Your products auto-sync as a feed.<br><br>Want me to walk you through the Merchant Center setup step-by-step?' }]
+  },
+  {
+    id: 'cleo',
+    name: 'Cleo',
+    emoji: '✍️',
+    role: 'Copywriter',
+    color: '#A084E0',
+    bg: 'rgba(160,132,224,.12)',
+    status: 'working',
+    task: 'Rewriting product descriptions in Veluera\'s luxury editorial voice',
+    prompts: ['Rewrite a product description', 'Write ad headline options', 'Write homepage hero copy', 'Make this sound more luxury'],
+    persona: `You are Cleo, Veluera's AI Copywriter. You write in a luxury editorial voice — confident, minimal, sensory, and aspirational. You never use filler phrases like "perfect for any home" or "great quality." Every line earns its place. You write product descriptions that make the reader feel the fabric, imagine the room, and want the piece immediately. You write ad headlines that stop the scroll. You write homepage copy that communicates the brand promise in under 10 words. You know the Veluera voice: warm, intentional, editorial. You write as if Veluera is the luxury furniture equivalent of a high-end fashion brand — every word is considered.`,
+    messages: [{ from:'agent', text:'<strong>Cleo here.</strong> I\'ve been reading through the product descriptions and I see the bones of something great — but they\'re a bit functional right now. Luxury copy doesn\'t describe the product, it sells the feeling.<br><br>Example rewrite of The Cloud\'s opening line:<br><br><em>Current:</em> "Experience the ultimate in comfort with The Cloud boneless sectional sofa."<br><em>Cleo\'s version:</em> "Some furniture holds a room together. The Cloud holds you."<br><br>Same product. Completely different feeling. Which product do you want me to start with?' }]
+  },
+  {
+    id: 'finn',
+    name: 'Finn',
+    emoji: '🚚',
+    role: 'Logistics & Fulfillment',
+    color: '#4CC9C9',
+    bg: 'rgba(76,201,201,.12)',
+    status: 'idle',
+    task: 'Setting up CJ Dropshipping fulfillment workflow and supplier escalation protocols',
+    prompts: ['Set up my CJ Dropshipping workflow', 'What do I do when an order is delayed?', 'How do I handle a damaged item claim?', 'Write a shipping delay customer script'],
+    persona: `You are Finn, Veluera's AI Logistics & Fulfillment specialist. You manage the operational side of dropshipping — supplier coordination with CJ Dropshipping, order routing, tracking number management, shipping delay protocols, and damage claim handling. You know that CJ Dropshipping ships from China with 12-20 day delivery times, and that setting customer expectations upfront is the #1 way to prevent disputes. You write fulfillment SOPs, escalation scripts, and supplier communication templates. You track order status, flag potential delays before they become customer complaints, and coordinate with Sage on customer communication. You are calm, systematic, and solution-first.`,
+    messages: [{ from:'agent', text:'<strong>Finn here.</strong> CJ Dropshipping is connected — here\'s your fulfillment workflow from day one.<br><br>When an order comes in:<br>1️⃣ CJ auto-processes within 1-3 business days (confirm Auto Order is on in CJ settings)<br>2️⃣ Tracking number appears in Shopify within 3-5 days<br>3️⃣ Delivery to US customer: 12-20 business days<br>4️⃣ Send tracking email at day 3, check-in email at day 10<br><br>Most important: if an order goes 20+ days without delivery, escalate with CJ before the customer does. You want to be the one calling them with a solution — not responding to a dispute.<br><br>Want me to set up the order delay alert protocol?' }]
   }
 ];
 
@@ -2615,11 +2680,11 @@ const AGENT_RESPONSES = {
 // ── AGENT ZONE MAP ──
 const AGENT_ZONES = {
   executive: ['director'],
-  creative:  ['lux','kai'],
-  marketing: ['maya','zara'],
+  creative:  ['lux','kai','cleo'],
+  marketing: ['maya','gus','pia'],
   finance:   ['rex','eli'],
-  ops:       ['sage','atlas','lex'],
-  content:   ['nova','jade'],
+  ops:       ['sage','finn','atlas','lex'],
+  content:   ['nova','ivy','zara'],
 };
 
 function goToAgent(id) {
@@ -3989,6 +4054,8 @@ const DOCS = [
 const AGENT_DOC_TEMPLATES = [
   {
     agentId: 'rex', agentName: 'Rex', agentEmoji: '📈', agentColor: '#E07A4C',
+    category: 'Finance',
+    collaborators: [{ name: 'Maya', emoji: '📊', color: '#5B8DE0', role: 'Ad data' }],
     title: 'Weekly Revenue Model — {WEEK}',
     tag: 'Analytics',
     desc: 'Ad spend scenario analysis, ROAS breakdown, and projected profit for the current 7-day window.',
@@ -4495,6 +4562,9 @@ function generateAgentDoc() {
   addActivityItem(tpl.agentEmoji, tpl.agentColor, tpl.agentName, `Generated new document: "${doc.title}"`);
 }
 
+let activeDocFilter = 'All';
+const DOC_CATEGORIES = ['All','Finance','Marketing','Brand','SEO & Content','Social & Content','PR & Influencer','Operations','Risk & Legal'];
+
 function renderAgentDocGrid() {
   const grid = document.getElementById('agent-doc-cards-grid');
   const label = document.getElementById('agent-docs-label');
@@ -4504,23 +4574,49 @@ function renderAgentDocGrid() {
   if (label) label.style.display='flex';
   if (countEl) countEl.textContent = `${data.agentDocs.length} saved`;
 
-  grid.innerHTML = data.agentDocs.map(doc => `
+  // Render category filter tabs
+  let filterEl = document.getElementById('doc-filter-tabs');
+  if (!filterEl) {
+    filterEl = document.createElement('div');
+    filterEl.id = 'doc-filter-tabs';
+    filterEl.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;';
+    grid.parentNode.insertBefore(filterEl, grid);
+  }
+  filterEl.innerHTML = DOC_CATEGORIES.map(cat => `
+    <button onclick="setDocFilter('${cat}')" style="font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid ${activeDocFilter===cat?'var(--gold)':'var(--border)'};background:${activeDocFilter===cat?'rgba(201,168,76,.12)':'transparent'};color:${activeDocFilter===cat?'var(--gold)':'var(--muted)'};cursor:pointer;letter-spacing:.5px;transition:all .2s;">${cat}</button>
+  `).join('');
+
+  const filtered = activeDocFilter === 'All' ? data.agentDocs : data.agentDocs.filter(d => d.category === activeDocFilter);
+
+  grid.innerHTML = filtered.length ? filtered.map(doc => {
+    const collabs = (doc.collaborators||[]).map(c => `<div style="width:20px;height:20px;border-radius:50%;background:${c.color}22;border:1.5px solid ${c.color}44;display:flex;align-items:center;justify-content:center;font-size:10px;" title="${c.name} · ${c.role}">${c.emoji}</div>`).join('');
+    return `
     <div class="doc-card agent-doc-card" onclick="openAgentDoc(${doc.id})">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+        <div style="font-size:9px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.05);color:var(--muted);letter-spacing:1px;text-transform:uppercase;">${doc.category||'General'}</div>
         <div class="doc-badge agent-badge">${doc.tag}</div>
         ${doc.isNew ? '<div class="doc-badge new-badge">New</div>' : ''}
       </div>
-      <div class="doc-title" style="font-size:16px;">${doc.title}</div>
-      <div class="doc-desc">${doc.desc}</div>
-      <div class="agent-doc-byline">
-        <div class="agent-doc-avatar" style="background:${doc.agentColor}22;border:1.5px solid ${doc.agentColor}44;">${doc.agentEmoji}</div>
-        <div class="agent-doc-name">${doc.agentName}</div>
+      <div class="doc-title" style="font-size:15px;margin-bottom:4px;">${doc.title}</div>
+      <div class="doc-desc" style="font-size:11px;">${doc.desc}</div>
+      <div class="agent-doc-byline" style="margin-top:10px;">
+        <div class="agent-doc-avatar" style="background:${doc.agentColor}22;border:1.5px solid ${doc.agentColor}44;" title="${doc.agentName} — Lead">${doc.agentEmoji}</div>
+        <div>
+          <div class="agent-doc-name" style="font-size:11px;">${doc.agentName} <span style="color:var(--faint);font-size:9px;">Lead</span></div>
+          ${(doc.collaborators||[]).length ? `<div style="font-size:9px;color:var(--faint);">+ ${doc.collaborators.map(c=>c.name).join(', ')}</div>` : ''}
+        </div>
+        ${collabs ? `<div style="display:flex;gap:2px;margin-left:4px;">${collabs}</div>` : ''}
         <div class="agent-doc-time">${doc.generatedAt}</div>
-        <button onclick="event.stopPropagation();downloadAgentDoc(${doc.id})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;margin-left:4px;">⬇</button>
+        <button onclick="event.stopPropagation();downloadAgentDoc(${doc.id})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">⬇</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('') : `<div style="color:var(--muted);font-size:13px;padding:20px 0;">No documents in this category yet.</div>`;
 }
+
+window.setDocFilter = function(cat) {
+  activeDocFilter = cat;
+  renderAgentDocGrid();
+};
 
 window.downloadAgentDoc = function(id) {
   const doc = data.agentDocs.find(d => d.id === id);
@@ -4591,13 +4687,22 @@ window.printAgentDoc = function(id) {
 
 // ── SESSION-BASED GENERATION TIMER ──
 // Each agent delivers one doc per session, staggered 5 min apart. Stops after all 9 are done.
-const GEN_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes between each
+// 3–5 docs per day: space them ~3.5 hrs apart (12600 seconds)
+// Randomize ±30 min so it feels natural, not mechanical
+const BASE_INTERVAL_MS = 3.5 * 60 * 60 * 1000;
+const GEN_INTERVAL_MS  = BASE_INTERVAL_MS + (Math.random() - 0.5) * 60 * 60 * 1000;
+const MAX_DOCS_PER_DAY = 4; // cap at 4 per day — quality over quantity
 let genTimeLeft = GEN_INTERVAL_MS;
 let genTimerActive = false;
 let sessionDocCount = 0; // how many docs generated this session
 
-// Track which templates have already been delivered this session
+// Track which templates delivered this session + daily cap
 const sessionDelivered = new Set(data.agentDocs.slice(0, 4).map(d => d.templateIdx));
+const todayKey = new Date().toISOString().slice(0,10);
+
+function docsGeneratedToday() {
+  return (data.agentDocs || []).filter(d => (d.generatedAt || '').startsWith(todayKey.slice(0,7))).length;
+}
 
 function getRemainingTemplates() {
   return AGENT_DOC_TEMPLATES
@@ -4607,20 +4712,25 @@ function getRemainingTemplates() {
 
 function startGenTimer() {
   if (genTimerActive) return;
+  // Daily cap check
+  if (sessionDocCount >= MAX_DOCS_PER_DAY) {
+    const ticker = document.getElementById('gen-ticker-text');
+    if (ticker) ticker.innerHTML = `✓ Team delivered ${MAX_DOCS_PER_DAY} documents today — check back tomorrow for fresh reports.`;
+    return;
+  }
   const remaining = getRemainingTemplates();
   if (remaining.length === 0) {
-    // All agents have delivered this session — show done state
     const ticker = document.getElementById('gen-ticker-text');
     const badge = document.getElementById('gen-agent-badge');
     const fill = document.getElementById('gen-progress-fill');
-    if (ticker) ticker.innerHTML = `All 9 agents have delivered their reports for this session. <span style="color:var(--muted);">Open tomorrow for fresh updates.</span>`;
+    if (ticker) ticker.innerHTML = `✓ All agents have delivered today's reports. <span style="color:var(--muted);">New documents tomorrow.</span>`;
     if (badge) badge.textContent = '';
     if (fill) fill.style.width = '100%';
     return;
   }
 
   genTimerActive = true;
-  genTimeLeft = GEN_INTERVAL_MS;
+  genTimeLeft = BASE_INTERVAL_MS + (Math.random() - 0.5) * 60 * 60 * 1000; // re-randomize each time
   const nextIdx = remaining[0];
   const nextAgent = AGENT_DOC_TEMPLATES[nextIdx];
 
@@ -4648,6 +4758,12 @@ function startGenTimer() {
       const tpl = AGENT_DOC_TEMPLATES[nextIdx];
       const ts = new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
       const week = getWeekLabel();
+      const CATEGORY_MAP = {
+        rex:'Finance', maya:'Marketing', kai:'Social & Content', nova:'Brand',
+        zara:'Operations', eli:'Marketing', lux:'PR & Influencer', sage:'Operations',
+        atlas:'Risk & Legal', lex:'Risk & Legal', ivy:'SEO & Content', pia:'Social & Content',
+        gus:'Marketing', cleo:'Brand', finn:'Operations'
+      };
       const doc = {
         id: Date.now(),
         templateIdx: nextIdx,
@@ -4655,6 +4771,8 @@ function startGenTimer() {
         agentName: tpl.agentName,
         agentEmoji: tpl.agentEmoji,
         agentColor: tpl.agentColor,
+        category: tpl.category || CATEGORY_MAP[tpl.agentId] || 'General',
+        collaborators: tpl.collaborators || [],
         title: tpl.title.replace('{WEEK}', week).replace('{WEEK_NUM}', sessionDocCount + 1).replace('{MONTH}', new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})),
         tag: tpl.tag,
         desc: tpl.desc,
