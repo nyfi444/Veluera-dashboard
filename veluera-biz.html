@@ -1922,15 +1922,28 @@ a{color:inherit;text-decoration:none;}
         resize:none;outline:none;font-family:'Inter',sans-serif;
         transition:border-color .2s;
       " onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendModalMsg();}"></textarea>
-      <button id="am-send" onclick="sendModalMsg()" style="
-        padding:0 20px;border-radius:12px;border:none;
-        background:rgba(201,168,76,.15);
-        color:rgba(201,168,76,.9);
-        font-size:13px;cursor:pointer;
-        letter-spacing:.5px;transition:all .2s;
-        border:1px solid rgba(201,168,76,.25);
-        white-space:nowrap;font-family:'Inter',sans-serif;
-      ">Send ↑</button>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button id="am-send" onclick="sendModalMsg()" style="
+          padding:0 20px;border-radius:12px;border:none;
+          background:rgba(201,168,76,.15);
+          color:rgba(201,168,76,.9);
+          font-size:13px;cursor:pointer;
+          letter-spacing:.5px;transition:all .2s;
+          border:1px solid rgba(201,168,76,.25);
+          white-space:nowrap;font-family:'Inter',sans-serif;
+          height:42px;
+        ">Send ↑</button>
+        <button onclick="assignTaskFromModal()" style="
+          padding:0 12px;border-radius:12px;
+          background:rgba(76,175,122,.12);
+          color:rgba(76,175,122,.9);
+          font-size:11px;cursor:pointer;
+          letter-spacing:.5px;transition:all .2s;
+          border:1px solid rgba(76,175,122,.25);
+          white-space:nowrap;font-family:'Inter',sans-serif;
+          height:28px;
+        " title="Save as a task for this agent + send to Director's log">✦ Assign</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5546,6 +5559,272 @@ window.printDoc = function(id) {
   win.document.close();
   setTimeout(() => win.print(), 500);
 };
+
+// ══════════════════════════════════════════
+// TASK ASSIGNMENT SYSTEM
+// ══════════════════════════════════════════
+
+data.assignedTasks = data.assignedTasks || [];
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function todayLabel() {
+  return new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+
+// Assign a task from the modal input box
+window.assignTaskFromModal = function() {
+  const inp = document.getElementById('am-input');
+  const text = inp ? inp.value.trim() : '';
+  if (!text) {
+    if (inp) { inp.style.borderColor = 'var(--red)'; setTimeout(() => inp.style.borderColor = '', 1200); }
+    return;
+  }
+  const agent = AGENTS.find(a => a.id === modalAgentId);
+  if (!agent) return;
+
+  const task = {
+    id: Date.now(),
+    date: todayKey(),
+    agentId: agent.id,
+    agentName: agent.name,
+    agentEmoji: agent.emoji,
+    agentColor: agent.color,
+    description: text,
+    status: 'in-progress',
+    assignedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+    docId: null
+  };
+
+  data.assignedTasks.unshift(task);
+  save();
+
+  showToast(`✓ Task assigned to ${agent.name} — Director notified`);
+
+  // Also send the message to the agent
+  sendModalMsg();
+
+  // Refresh Director brief and trigger agent doc
+  generateDirectorDailyBrief();
+  scheduleAgentTaskDoc(task);
+};
+
+// Detect if a message being sent looks like a task assignment
+window._origSendModalMsg = window.sendModalMsg;
+
+function looksLikeTask(text) {
+  const t = text.toLowerCase();
+  const triggers = ['create', 'write', 'build', 'design', 'draft', 'generate', 'research', 'find', 'make', 'set up', 'prepare', 'analyze', 'review', 'update', 'plan', 'develop', 'launch'];
+  return triggers.some(w => t.startsWith(w) || t.includes(' ' + w + ' '));
+}
+
+// ── DIRECTOR'S DAILY BRIEF ──
+
+function generateDirectorDailyBrief() {
+  const today = todayKey();
+  const todayTasks = data.assignedTasks.filter(t => t.date === today);
+  if (!todayTasks.length) return;
+
+  // Remove any existing brief for today
+  data.agentDocs = data.agentDocs.filter(d => !(d.isDirectorBrief && d.briefDate === today));
+
+  const taskRows = todayTasks.map(t => `
+    <tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #2e2e2e;">${t.agentEmoji} <strong>${t.agentName}</strong></td>
+      <td style="padding:10px 12px;border-bottom:1px solid #2e2e2e;">${t.description}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #2e2e2e;color:${t.status === 'completed' ? '#4CAF7A' : '#C9A84C'};">${t.status === 'completed' ? '✓ Completed' : '⟳ In Progress'}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #2e2e2e;font-size:11px;color:#888;">${t.assignedAt}</td>
+    </tr>`).join('');
+
+  const content = `
+<div style="font-family:'Inter',sans-serif;color:#f0ede8;background:#111;padding:40px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid #2e2e2e;">
+    <div style="font-size:32px;">👑</div>
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:#C9A84C;letter-spacing:2px;">DIRECTOR'S DAILY BRIEF</div>
+      <div style="font-size:12px;color:#888;letter-spacing:1px;margin-top:4px;text-transform:uppercase;">${todayLabel()}</div>
+    </div>
+  </div>
+
+  <p style="color:#aaa;font-size:13px;margin-bottom:28px;line-height:1.7;">All tasks assigned to the Veluera AI team today. Each agent is working on their assignment and will deliver a document upon completion.</p>
+
+  <table style="width:100%;border-collapse:collapse;background:#1a1a1a;border-radius:10px;overflow:hidden;border:1px solid #2e2e2e;">
+    <thead>
+      <tr style="background:#0a0a0a;">
+        <th style="padding:12px;text-align:left;font-size:11px;letter-spacing:1.5px;color:#888;text-transform:uppercase;border-bottom:1px solid #2e2e2e;">Agent</th>
+        <th style="padding:12px;text-align:left;font-size:11px;letter-spacing:1.5px;color:#888;text-transform:uppercase;border-bottom:1px solid #2e2e2e;">Task Assigned</th>
+        <th style="padding:12px;text-align:left;font-size:11px;letter-spacing:1.5px;color:#888;text-transform:uppercase;border-bottom:1px solid #2e2e2e;">Status</th>
+        <th style="padding:12px;text-align:left;font-size:11px;letter-spacing:1.5px;color:#888;text-transform:uppercase;border-bottom:1px solid #2e2e2e;">Time</th>
+      </tr>
+    </thead>
+    <tbody>${taskRows}</tbody>
+  </table>
+
+  <div style="margin-top:32px;padding:20px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:10px;">
+    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;margin-bottom:8px;">Director's Note</div>
+    <p style="color:#d4cfc8;font-size:13px;line-height:1.7;margin:0;">${todayTasks.length} task${todayTasks.length !== 1 ? 's' : ''} active today. Each agent will deliver their completed work document to the Documents section. Check back or filter by agent to review deliverables.</p>
+  </div>
+</div>`;
+
+  const doc = {
+    id: Date.now(),
+    title: `Director's Daily Brief — ${todayLabel()}`,
+    agentName: 'The Director',
+    agentEmoji: '👑',
+    agentColor: '#C9A84C',
+    category: 'Operations',
+    generatedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+    content,
+    isDirectorBrief: true,
+    briefDate: today
+  };
+
+  data.agentDocs.unshift(doc);
+  save();
+  renderAgentDocGrid();
+
+  const ticker = document.getElementById('gen-ticker-text');
+  if (ticker) ticker.innerHTML = `👑 <strong>The Director</strong> published today's brief — <span style="color:var(--green);cursor:pointer;" onclick="openAgentDoc(${doc.id})">View now ↗</span>`;
+}
+
+// ── AGENT TASK DOCUMENT GENERATION ──
+
+async function scheduleAgentTaskDoc(task) {
+  const apiKey = getApiKey();
+  const agent = AGENTS.find(a => a.id === task.agentId);
+  if (!agent) return;
+
+  if (!apiKey) {
+    // No API key: generate a template document immediately
+    generateTemplateTaskDoc(task, agent);
+    return;
+  }
+
+  // With API key: ask Claude to produce the deliverable
+  try {
+    const prompt = `You have been assigned the following task by Nyla (the founder of Veluera): "${task.description}"
+
+Please complete this task fully. Produce a complete, detailed, professional deliverable — not a plan, but the actual output (document, copy, list, analysis, strategy, script, etc.). Format your response in clean HTML suitable for a business document. Use headings, bullet points, and tables where appropriate. Be specific, actionable, and aligned with Veluera's luxury furniture brand identity.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 2048,
+        system: agent.persona,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const json = await res.json();
+    const reply = json.content?.[0]?.text || '';
+
+    const content = `
+<div style="font-family:'Inter',sans-serif;color:#f0ede8;background:#111;padding:40px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid #2e2e2e;">
+    <div style="font-size:32px;">${agent.emoji}</div>
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:${agent.color};letter-spacing:2px;">TASK DELIVERABLE</div>
+      <div style="font-size:12px;color:#888;letter-spacing:1px;margin-top:4px;">${agent.name} · ${agent.role}</div>
+    </div>
+  </div>
+  <div style="padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid #2e2e2e;border-radius:8px;margin-bottom:28px;">
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;">Task Assigned</div>
+    <div style="font-size:13px;color:#d4cfc8;">${task.description}</div>
+  </div>
+  <div style="font-size:13px;line-height:1.8;color:#d4cfc8;">${reply.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code style="background:rgba(201,168,76,.1);padding:2px 5px;border-radius:4px;font-size:12px;color:#C9A84C;">$1</code>')}</div>
+</div>`;
+
+    const doc = {
+      id: Date.now(),
+      title: task.description.length > 55 ? task.description.slice(0, 52) + '…' : task.description,
+      agentName: agent.name,
+      agentEmoji: agent.emoji,
+      agentColor: agent.color,
+      category: agent.role.split(' ')[0],
+      generatedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+      content,
+      taskId: task.id
+    };
+
+    data.agentDocs.unshift(doc);
+
+    // Mark task completed & link doc
+    const t = data.assignedTasks.find(t => t.id === task.id);
+    if (t) { t.status = 'completed'; t.docId = doc.id; }
+
+    save();
+    renderAgentDocGrid();
+    generateDirectorDailyBrief(); // refresh brief with updated status
+
+    showToast(`✓ ${agent.name} completed task — document delivered`);
+
+    const ticker = document.getElementById('gen-ticker-text');
+    if (ticker) ticker.innerHTML = `${agent.emoji} <strong>${agent.name}</strong> delivered: "${doc.title.slice(0,40)}…" — <span style="color:var(--green);cursor:pointer;" onclick="openAgentDoc(${doc.id})">Read ↗</span>`;
+
+  } catch(err) {
+    // Fall back to template
+    generateTemplateTaskDoc(task, agent);
+  }
+}
+
+function generateTemplateTaskDoc(task, agent) {
+  const content = `
+<div style="font-family:'Inter',sans-serif;color:#f0ede8;background:#111;padding:40px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid #2e2e2e;">
+    <div style="font-size:32px;">${agent.emoji}</div>
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:${agent.color};letter-spacing:2px;">TASK ACKNOWLEDGED</div>
+      <div style="font-size:12px;color:#888;letter-spacing:1px;margin-top:4px;">${agent.name} · ${agent.role}</div>
+    </div>
+  </div>
+  <div style="padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid #2e2e2e;border-radius:8px;margin-bottom:28px;">
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:6px;">Task Received</div>
+    <div style="font-size:13px;color:#d4cfc8;">${task.description}</div>
+  </div>
+  <p style="color:#aaa;font-size:13px;line-height:1.7;">Task logged and in progress. Connect your Anthropic API key in the Agent Hub to enable ${agent.name} to auto-complete tasks and deliver full documents directly to this section.</p>
+  <div style="margin-top:24px;padding:16px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;">
+    <div style="font-size:11px;color:#C9A84C;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">To enable auto-completion</div>
+    <p style="font-size:12px;color:#888;margin:0;">Go to Agent Hub → click any agent → add your Anthropic API key. Tasks will then be auto-completed and delivered here.</p>
+  </div>
+</div>`;
+
+  const doc = {
+    id: Date.now(),
+    title: task.description.length > 55 ? task.description.slice(0, 52) + '…' : task.description,
+    agentName: agent.name,
+    agentEmoji: agent.emoji,
+    agentColor: agent.color,
+    category: agent.role.split(' ')[0],
+    generatedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+    content,
+    taskId: task.id
+  };
+
+  data.agentDocs.unshift(doc);
+  const t = data.assignedTasks.find(t => t.id === task.id);
+  if (t) t.docId = doc.id;
+  save();
+  renderAgentDocGrid();
+  showToast(`✓ ${agent.name} logged task — connect API key to auto-complete`);
+}
+
+// On load: regenerate Director brief if tasks exist for today
+(function initTaskSystem() {
+  const today = todayKey();
+  const todayTasks = (data.assignedTasks || []).filter(t => t.date === today);
+  const hasBrief = (data.agentDocs || []).some(d => d.isDirectorBrief && d.briefDate === today);
+  if (todayTasks.length && !hasBrief) generateDirectorDailyBrief();
+})();
 
 seedInitialAgentDocs();
 renderDocIndex();
