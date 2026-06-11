@@ -2744,6 +2744,19 @@ const AGENTS = [
     prompts: ['Set up my CJ Dropshipping workflow', 'What do I do when an order is delayed?', 'How do I handle a damaged item claim?', 'Write a shipping delay customer script'],
     persona: `You are Finn, Veluera's AI Logistics & Fulfillment specialist. You manage the operational side of dropshipping — supplier coordination with CJ Dropshipping, order routing, tracking number management, shipping delay protocols, and damage claim handling. You know that CJ Dropshipping ships from China with 12-20 day delivery times, and that setting customer expectations upfront is the #1 way to prevent disputes. You write fulfillment SOPs, escalation scripts, and supplier communication templates. You track order status, flag potential delays before they become customer complaints, and coordinate with Sage on customer communication. You are calm, systematic, and solution-first.`,
     messages: [{ from:'agent', text:'<strong>Finn here.</strong> CJ Dropshipping is connected — here\'s your fulfillment workflow from day one.<br><br>When an order comes in:<br>1️⃣ CJ auto-processes within 1-3 business days (confirm Auto Order is on in CJ settings)<br>2️⃣ Tracking number appears in Shopify within 3-5 days<br>3️⃣ Delivery to US customer: 12-20 business days<br>4️⃣ Send tracking email at day 3, check-in email at day 10<br><br>Most important: if an order goes 20+ days without delivery, escalate with CJ before the customer does. You want to be the one calling them with a solution — not responding to a dispute.<br><br>Want me to set up the order delay alert protocol?' }]
+  },
+  {
+    id: 'scout',
+    name: 'Scout',
+    emoji: '🔍',
+    role: 'Supplier Analyst',
+    color: '#B47FE3',
+    bg: 'rgba(180,127,227,.12)',
+    status: 'working',
+    task: 'Vetting luxury furniture suppliers across CJ, Spocket, Zendrop, and private manufacturers for margin, quality, and reliability',
+    prompts: ['Compare CJ vs Spocket for luxury furniture', 'Find me high-margin sofa suppliers', 'What should I look for in a supplier contract?', 'Rate my current CJ supplier', 'Best US-based dropship furniture suppliers'],
+    persona: `You are Scout, Veluera's AI Supplier Analyst. Your job is to research, vet, and compare suppliers for luxury furniture dropshipping. You specialize in evaluating CJ Dropshipping, Spocket, Zendrop, Faire, and private manufacturer sourcing options. You analyze: product quality signals (photos, reviews, return rates), shipping times (especially US warehouse availability), margin potential (target 35–45% net), supplier reliability scores, MOQ requirements, and contract terms. You help Nyla decide WHICH suppliers to use, WHICH products to add to Veluera's catalog, and HOW to negotiate better terms. You also flag risks — counterfeit concerns, fragile shipping categories, high chargeback risk items — and recommend alternatives. You speak clearly, compare options in tables, and always tie recommendations to Veluera's luxury brand standards and profitability targets.`,
+    messages: [{ from:'agent', text:'<strong>Scout here.</strong> I\'m your supplier intelligence unit — I find, vet, and rank suppliers so you\'re never locked into a bad deal.<br><br>For Veluera\'s luxury positioning, I\'m evaluating suppliers on 5 criteria:<br>🏆 <strong>Product quality</strong> — does it look $1,200+ worthy?<br>📦 <strong>US warehouse availability</strong> — 3-7 day shipping vs 15-25 days<br>💰 <strong>Margin</strong> — can we clear 35-45% net after ads?<br>⭐ <strong>Supplier reliability</strong> — order accuracy, response time, dispute history<br>📄 <strong>Contract terms</strong> — return policy, damage claims, exclusivity<br><br>What do you want me to analyze first — your current CJ supplier, alternatives, or new product categories?' }]
   }
 ];
 
@@ -3561,9 +3574,11 @@ const DOCS = [
     desc: 'Full executive business plan — mission, market opportunity, revenue model, competitive advantage, financial projections, and exit strategy.',
     tag: 'Strategy',
     pages: '12 pages',
+    pages: '15 pages',
     content: `
 <h1>Veluera — Executive Business Plan</h1>
-<div class="doc-subtitle">Luxury Furniture Dropshipping · Founded June 2026</div>
+<div class="doc-subtitle">Luxury Furniture · DTC E-Commerce · Revised June 2026 · Confidential</div>
+<div class="doc-callout" style="border-color:#C9A84C;background:rgba(201,168,76,.06);">📌 <strong>Revised June 2026.</strong> This plan reflects current market conditions, updated AI-first operations model, Scout supplier intelligence, and the 30-day $10K profit sprint in progress.</div>
 
 <h2>01. Mission & Vision</h2>
 <p><strong>Mission:</strong> Veluera curates and delivers luxury furniture and home living pieces for the intentional home — making designer-quality interiors accessible without the designer price tag.</p>
@@ -3582,24 +3597,28 @@ const DOCS = [
 
 <h2>03. Products & Catalog</h2>
 <table class="doc-table">
-<thead><tr><th>Product</th><th>Price</th><th>Est. COGS</th><th>Net Margin</th><th>Category</th></tr></thead>
+<thead><tr><th>Product</th><th>Price</th><th>Est. COGS</th><th>Net Margin</th><th>Category</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td><strong>The Cloud — Boneless Sectional</strong></td><td>$1,299</td><td>$650</td><td>~33%</td><td>Living Room · Hero</td></tr>
-<tr><td><strong>The Velvet Throne — Accent Chair</strong></td><td>$849</td><td>$420</td><td>~35%</td><td>Living Room</td></tr>
-<tr><td><strong>The Monolith — Marble Coffee Table</strong></td><td>$699</td><td>$310</td><td>~40%</td><td>Living Room</td></tr>
-<tr><td><strong>The Haven — Platform Bed Frame</strong></td><td>$1,199</td><td>$580</td><td>~38%</td><td>Bedroom</td></tr>
-<tr><td><strong>The Cascade — Dining Table</strong></td><td>$1,499</td><td>$720</td><td>~40%</td><td>Dining</td></tr>
+<tr><td><strong>The Cloud — Boneless Sectional</strong></td><td>$1,299</td><td>$650</td><td>~33%</td><td>Living Room</td><td>🟢 Hero SKU</td></tr>
+<tr><td><strong>The Velvet Throne — Accent Chair</strong></td><td>$849</td><td>$420</td><td>~35%</td><td>Living Room</td><td>🟡 Active</td></tr>
+<tr><td><strong>The Monolith — Marble Coffee Table</strong></td><td>$699</td><td>$310</td><td>~40%</td><td>Living Room</td><td>🟡 Active</td></tr>
+<tr><td><strong>The Haven — Platform Bed Frame</strong></td><td>$1,199</td><td>$580</td><td>~38%</td><td>Bedroom</td><td>🟡 Active</td></tr>
+<tr><td><strong>The Cascade — Dining Table</strong></td><td>$1,499</td><td>$720</td><td>~40%</td><td>Dining</td><td>🟡 Active</td></tr>
+<tr><td><strong>Boucle Accent Chair</strong></td><td>$649</td><td>$180</td><td>~42%</td><td>Living Room</td><td>🔵 Scout Pick — Add Now</td></tr>
+<tr><td><strong>Velvet Chaise Lounge</strong></td><td>$899</td><td>$240</td><td>~40%</td><td>Living Room</td><td>🔵 Scout Pick — Priority</td></tr>
+<tr><td><strong>Travertine Side Table</strong></td><td>$189</td><td>$55</td><td>~45%</td><td>Living Room</td><td>🔵 Scout Pick — Upsell</td></tr>
 </tbody>
 </table>
-<p><strong>Expansion roadmap:</strong> Add 2–3 new SKUs per month starting Month 2. Priority categories: bedroom bundles, arch floor mirrors, boucle accent chairs, Japandi shelving.</p>
+<p><strong>Expansion roadmap (Scout-approved):</strong> Boucle Accent Chair and Velvet Chaise Lounge are highest-priority additions — both trending heavily on TikTok and Pinterest, 40%+ margin, CJ suppliers rated 4.8+. Add 2–3 new SKUs per month starting Month 2. Build "The Salon Collection" bundle ($2,199) combining The Cloud + Boucle Chair + Travertine Table to push AOV to $2K+.</p>
 
 <h2>04. Competitive Advantage</h2>
 <ul>
-<li><strong>Brand Equity:</strong> Veluera operates as a luxury brand — curated catalog, editorial copy, cohesive aesthetic — not a generic dropship store. This commands premium pricing and builds a repeat customer base.</li>
-<li><strong>AI-First Operations:</strong> 90%+ of content creation, customer service, email marketing, and analytics runs on AI. This enables one-person scalability to $1M+ revenue that would otherwise require a team of 8–10.</li>
-<li><strong>Trend × Evergreen Mix:</strong> Boneless couches (viral trend) + classic luxury furniture (evergreen demand) = both fast early revenue and long-term stable sales.</li>
-<li><strong>Supplier Diversity:</strong> AppScenic (US quality), Syncee (EU catalog), CJ Dropshipping (COGS optimization) — never single-source dependent.</li>
-<li><strong>Content Moat:</strong> Once Veluera builds 6–12 months of organic TikTok/Instagram presence with strong engagement, that content library becomes a compounding acquisition channel that reduces paid ad dependency.</li>
+<li><strong>Brand Equity:</strong> Veluera operates as a true luxury brand — curated catalog, editorial copy, cohesive aesthetic — not a generic dropship store. This commands premium pricing and builds repeat customers willing to spend $1,200+ without hesitation.</li>
+<li><strong>AI-Powered 11-Agent Team:</strong> Every department — marketing, social, brand, sourcing, CRM, customer experience, analytics, PR, legal, risk, logistics, and supplier intelligence — runs on specialized AI agents. This is the operational infrastructure of an 8-figure brand at zero payroll cost.</li>
+<li><strong>Scout Supplier Intelligence:</strong> Unlike competitors locked into a single supplier, Veluera uses Scout to continuously evaluate CJ, Spocket, Zendrop, and private manufacturers — always optimizing for margin and quality without service disruptions.</li>
+<li><strong>Trend × Evergreen Mix:</strong> Boneless couches (viral trend, 400%+ TikTok growth) + boucle + Japandi (2025–2026 peak trend) + classic luxury evergreens = fast revenue now and stable long-term sales.</li>
+<li><strong>Content Moat:</strong> 6–12 months of organic TikTok/Instagram compounding. Each viral video becomes a low-cost acquisition machine that compounds while paid ads scale in parallel.</li>
+<li><strong>AI Director System:</strong> The Director assigns daily tasks across all agents and produces a daily brief — Veluera has the operational clarity of a funded startup with zero overhead.</li>
 </ul>
 
 <h2>05. Revenue Model</h2>
@@ -3632,7 +3651,18 @@ const DOCS = [
 </tbody>
 </table>
 
-<h2>08. Legal & Financial Structure</h2>
+<h2>08. Supplier Strategy (Scout-Managed)</h2>
+<table class="doc-table">
+<thead><tr><th>Phase</th><th>Supplier Mix</th><th>Avg Margin</th><th>Ship Time</th></tr></thead>
+<tbody>
+<tr><td><strong>Launch (Now–$15K/mo)</strong></td><td>CJ Dropshipping — primary. Free, widest SKU selection.</td><td>38–45%</td><td>12–20 days</td></tr>
+<tr><td><strong>Growth ($15K–$50K/mo)</strong></td><td>CJ primary + Spocket for 2–3 US-warehouse hero SKUs</td><td>35–42%</td><td>3–7 days (hero SKUs)</td></tr>
+<tr><td><strong>Scale ($50K+/mo)</strong></td><td>Private label with CJ manufacturer + Spocket US fulfillment</td><td>48–60%</td><td>3–5 days</td></tr>
+</tbody>
+</table>
+<p>Scout monitors supplier health weekly — rating below 4.7★, dispute rate above 3%, or shipping delays beyond 22 days trigger automatic supplier switch recommendation.</p>
+
+<h2>09. Legal & Financial Structure</h2>
 <ul>
 <li><strong>Business Entity:</strong> Form single-member LLC immediately — separates personal and business liability, enables business banking, and unlocks tax write-offs</li>
 <li><strong>Banking:</strong> Open Mercury or Relay business checking (free, no minimums, startup-friendly, powerful API for bookkeeping automation)</li>
@@ -3642,10 +3672,24 @@ const DOCS = [
 <li><strong>Trademark:</strong> File USPTO trademark for "Veluera" by Month 3–4. ~$250–$350 filing fee. Protects brand name from copycats as you scale.</li>
 </ul>
 
-<h2>09. Exit / Acquisition Path</h2>
+<h2>10. Exit / Acquisition Path</h2>
 <p>At $1M+ annual revenue with 12+ months of documented financials and systematized operations, Veluera becomes a highly acquirable e-commerce asset. Current multiples on Acquire.com and Empire Flippers for profitable Shopify stores: <strong>2.5–4.5× annual profit</strong>.</p>
 <p>Example: $500K annual profit × 3.5× multiple = <strong>$1.75M exit</strong>. The private-label transition (Year 2) pushes this multiple higher due to proprietary product ownership and brand defensibility.</p>
-<div class="doc-callout"><strong>The real exit strategy:</strong> Build the systems so well that the business runs without you. That's what buyers pay a premium for — and it's the same thing that makes your life easier today.</div>
+<div class="doc-callout"><strong>The real exit strategy:</strong> Build the systems so well that the business runs without you. That's what buyers pay a premium for — and it's the same thing that makes your life easier today. The AI agent team is the system. It's already built.</div>
+
+<h2>11. The Nyla Advantage — Why This Works</h2>
+<p>Most dropshippers fail because they run a store. Nyla Brown is building a <em>brand</em>. The difference:</p>
+<table class="doc-table">
+<thead><tr><th></th><th>Generic Dropshipper</th><th>Veluera</th></tr></thead>
+<tbody>
+<tr><td>Product selection</td><td>Whatever sells</td><td>Curated luxury catalog, Scout-vetted</td></tr>
+<tr><td>Supplier strategy</td><td>One supplier, locked in</td><td>Multi-platform, Scout-optimized monthly</td></tr>
+<tr><td>Marketing</td><td>Copy trending ads</td><td>Original creative, luxury editorial voice</td></tr>
+<tr><td>Operations</td><td>Founder does everything</td><td>11-agent AI team, Director-managed</td></tr>
+<tr><td>Documents</td><td>None</td><td>Daily Director brief + agent deliverables</td></tr>
+<tr><td>Exit value</td><td>Low — no brand equity</td><td>High — brand, systems, content library</td></tr>
+</tbody>
+</table>
 `
   },
   {
@@ -5244,6 +5288,76 @@ Questions? Reply to this email — we're here.<br>
 <h2>Weekly Fulfillment Audit</h2>
 <p>Every Monday: check all orders placed 7-14 days ago. Any without tracking confirmation → escalate to AppScenic supplier immediately. Any orders past 14 days without delivery → proactive outreach to customer before they contact you.</p>`
   },
+  {
+    agentId: 'scout', agentName: 'Scout', agentEmoji: '🔍', agentColor: '#B47FE3',
+    title: 'Supplier Vetting Report — CJ vs Spocket vs Zendrop',
+    tag: 'Sourcing',
+    category: 'Operations',
+    desc: 'Side-by-side platform comparison for luxury furniture sourcing with margin analysis and Scout\'s recommendation.',
+    generate: (ts) => `
+<h1>Supplier Platform Comparison Report</h1>
+<div class="doc-subtitle">Sourcing Intelligence · Scout 🔍 · ${ts}</div>
+<div class="doc-callout"><strong>Scout's Finding:</strong> CJ Dropshipping wins on margin, Spocket wins on shipping speed. For Veluera's launch phase, CJ is the right call — but Spocket becomes worth it once you're doing $15K+/month and customer shipping complaints start costing you reviews.</div>
+<h2>Platform Scorecard</h2>
+<table class="doc-table"><thead><tr><th>Criteria</th><th>CJ Dropshipping</th><th>Spocket</th><th>Zendrop</th></tr></thead>
+<tbody>
+<tr><td>US Warehouse Stock</td><td>Limited — growing</td><td>✅ Strong (60% US/EU)</td><td>Moderate</td></tr>
+<tr><td>Shipping Time (US)</td><td>12–20 days avg</td><td>3–7 days avg</td><td>7–14 days avg</td></tr>
+<tr><td>Luxury Furniture SKUs</td><td>⭐⭐⭐⭐ — wide selection</td><td>⭐⭐ — limited high-end</td><td>⭐⭐⭐ — moderate</td></tr>
+<tr><td>Product Cost / Margin</td><td>Lowest cost → 40–48% margin</td><td>Higher cost → 25–35% margin</td><td>Mid cost → 32–40% margin</td></tr>
+<tr><td>Shopify Integration</td><td>✅ Native</td><td>✅ Native</td><td>✅ Native</td></tr>
+<tr><td>Private Labeling</td><td>✅ Available</td><td>❌ No</td><td>✅ Limited</td></tr>
+<tr><td>MOQ for Custom</td><td>50–200 units</td><td>N/A</td><td>100+ units</td></tr>
+<tr><td>Monthly Cost</td><td>Free</td><td>$24–$97/mo</td><td>Free–$49/mo</td></tr>
+</tbody></table>
+<h2>Scout's Recommendation by Phase</h2>
+<ul>
+<li><strong>Launch ($0–$15K/mo):</strong> CJ Dropshipping only. Free, widest SKU selection, best margins. Accept longer shipping — offset with expectation-setting copy on product pages ("Crafted and shipped in 12–18 days").</li>
+<li><strong>Growth ($15K–$50K/mo):</strong> Add Spocket for 2-3 hero SKUs available in US warehouse. Offer "Priority Shipping" variant at $49 premium — covers Spocket cost increase and actually improves margin.</li>
+<li><strong>Scale ($50K+/mo):</strong> Negotiate private label with CJ manufacturer directly. Remove middleman. Expected margin jump: +8–12%.</li>
+</ul>
+<h2>Red Flags to Screen For</h2>
+<ul>
+<li>Supplier rating below 4.7 stars — reject</li>
+<li>No US warehouse option for items over $600 — shipping damage risk too high</li>
+<li>No return/replacement policy in writing — never list the product</li>
+<li>Fewer than 50 orders fulfilled — unproven reliability</li>
+<li>Product photos look AI-generated or reused across multiple suppliers — counterfeit risk</li>
+</ul>
+<h2>Current CJ Supplier Assessment</h2>
+<p>For The Cloud (boneless sectional): CJ's primary supplier averages 4.8★, ships in 14 days to US, and has a 2.1% dispute rate — acceptable for launch. Recommend ordering a sample unit before scaling spend past $500/day to verify quality firsthand.</p>`
+  },
+  {
+    agentId: 'scout', agentName: 'Scout', agentEmoji: '🔍', agentColor: '#B47FE3',
+    title: 'High-Margin SKU Opportunity Report — {WEEK}',
+    tag: 'Sourcing',
+    category: 'Operations',
+    desc: 'New product opportunities with margin analysis, supplier availability, and fit-score for Veluera\'s luxury catalog.',
+    generate: (ts) => `
+<h1>High-Margin SKU Opportunity Report</h1>
+<div class="doc-subtitle">Product Intelligence · Scout 🔍 · ${ts}</div>
+<div class="doc-callout"><strong>Scout's Note:</strong> These are the 5 product categories with the highest margin potential AND lowest competition on TikTok Shop and Meta right now. All available on CJ Dropshipping with no MOQ.</div>
+<h2>Top 5 SKU Opportunities</h2>
+<table class="doc-table"><thead><tr><th>Product</th><th>Supplier Cost</th><th>Sell Price</th><th>Net Margin</th><th>Veluera Fit</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td>Boucle Accent Chair</td><td>$180</td><td>$649</td><td>42%</td><td>⭐⭐⭐⭐⭐</td><td>Import now</td></tr>
+<tr><td>Japandi Floor Lamp Set</td><td>$65</td><td>$249</td><td>44%</td><td>⭐⭐⭐⭐</td><td>Test with 1 ad</td></tr>
+<tr><td>Velvet Chaise Lounge</td><td>$240</td><td>$899</td><td>40%</td><td>⭐⭐⭐⭐⭐</td><td>Priority import</td></tr>
+<tr><td>Travertine Side Table (faux)</td><td>$55</td><td>$189</td><td>45%</td><td>⭐⭐⭐⭐</td><td>Add as upsell</td></tr>
+<tr><td>Modular Bookcase — Oak Finish</td><td>$195</td><td>$749</td><td>41%</td><td>⭐⭐⭐</td><td>Monitor trend</td></tr>
+</tbody></table>
+<h2>Immediate Priority: Boucle Accent Chair</h2>
+<p>Boucle texture is the #1 trending luxury home aesthetic on TikTok and Pinterest in 2025. CJ has 3 suppliers with 4.8+ ratings and US warehouse options. At $649, it pairs perfectly with The Cloud as an upsell or standalone hero product. Expected AOV increase if bundled: +$420 per order.</p>
+<h2>Bundle Opportunity</h2>
+<p><strong>"The Salon Collection" Bundle:</strong> The Cloud Sectional + Boucle Accent Chair + Travertine Side Table = $2,199 bundle price. Individual sum: $2,137. Bundle saves customer $62 while increasing your AOV by $1,570 vs a single-sectional sale. Margin: 38% net.</p>
+<h2>Products to Avoid</h2>
+<ul>
+<li>Platform beds — high damage rate in shipping, high return rate</li>
+<li>Glass dining tables — fragile, chargeback magnet at $1,000+</li>
+<li>Outdoor furniture — seasonal demand, wrong audience for Veluera</li>
+<li>Generic grey sofas — commodity pricing war, margin destroyed</li>
+</ul>`
+  },
 ];
 
 data.agentDocs = data.agentDocs || [];
@@ -5469,9 +5583,9 @@ window.toggleAgentClock = function() {
 
 // ── SESSION-BASED GENERATION TIMER ──
 // Each agent delivers one doc per session, staggered 3.5 hrs apart.
-const BASE_INTERVAL_MS = 3.5 * 60 * 60 * 1000;
-const GEN_INTERVAL_MS  = BASE_INTERVAL_MS + (Math.random() - 0.5) * 60 * 60 * 1000;
-const MAX_DOCS_PER_DAY = 4; // cap at 4 per day — quality over quantity
+const BASE_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes between docs
+const GEN_INTERVAL_MS  = BASE_INTERVAL_MS + (Math.random() - 0.5) * 2 * 60 * 1000; // ±1 min randomness
+const MAX_DOCS_PER_DAY = 50; // effectively unlimited — let agents work
 let genTimeLeft = GEN_INTERVAL_MS;
 let genTimerActive = false;
 let sessionDocCount = 0; // how many docs generated this session
@@ -5512,7 +5626,7 @@ function startGenTimer() {
   }
 
   genTimerActive = true;
-  genTimeLeft = BASE_INTERVAL_MS + (Math.random() - 0.5) * 60 * 60 * 1000; // re-randomize each time
+  genTimeLeft = BASE_INTERVAL_MS + (Math.random() - 0.5) * 2 * 60 * 1000; // re-randomize each time
   const nextIdx = remaining[0];
   const nextAgent = AGENT_DOC_TEMPLATES[nextIdx];
 
