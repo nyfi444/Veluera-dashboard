@@ -3437,7 +3437,7 @@ window.sendModalMsg = async function() {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: wantsDoc ? 4096 : 1024,
         system: agent.persona + docInstructions + '\n\nIMPORTANT STYLE RULES: Never use emojis. No colored text references. Write in a clean, professional, editorial tone.',
         messages: modalMsgs.map(m => ({ role: m.role, content: m.content }))
@@ -3452,7 +3452,7 @@ window.sendModalMsg = async function() {
     const json = await res.json();
     const reply = json.content?.[0]?.text || '';
     const replyIdx = modalMsgs.length;
-    modalMsgs.push({ role: 'assistant', content: reply, isDoc: wantsDoc, docTitle });
+    modalMsgs.push({ role: 'assistant', content: reply });
 
     // Auto-save to Documents if it was a doc request
     if (wantsDoc) {
@@ -6013,7 +6013,7 @@ function startGenTimer() {
             'anthropic-dangerous-direct-browser-access': 'true'
           },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-5',
+            model: 'claude-sonnet-4-6',
             max_tokens: 2500,
             system: agentObj.persona + `\n\nYou are producing a professional internal business document for Veluera. Format your response as clean HTML (no <html>/<head> tags). Use h2 for section headings, h3 for sub-headings, ul/ol for lists, and tables where relevant. No emojis anywhere. No colored text — plain black and white only. Be specific, data-driven, and action-oriented. Every section must contain real, immediately usable insights or copy — not vague advice. Today's date: ${ts}.`,
             messages: [{
@@ -6282,7 +6282,7 @@ Please complete this task fully. Produce a complete, detailed, professional deli
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 2048,
         system: agent.persona,
         messages: [{ role: 'user', content: prompt }]
@@ -6425,7 +6425,7 @@ window.directorDelegate = async function() {
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
+          model: 'claude-sonnet-4-6',
           max_tokens: 200,
           system: `You are The Director, Chief of Staff for Veluera. Rewrite the following task directive as a concise, authoritative one-sentence assignment you are sending to ${targetAgent.name} (${targetAgent.role}). Be specific, professional, and action-oriented. Return only the assignment sentence — no preamble.`,
           messages: [{ role: 'user', content: taskText }]
@@ -6514,7 +6514,7 @@ window.directorStandup = async function() {
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
+          model: 'claude-sonnet-4-6',
           max_tokens: 1200,
           system: `You are The Director, Chief of Staff for Veluera luxury furniture. Today is ${todayLabel()}. Your team: ${agentList}. Assign each agent exactly one specific, high-priority task for today tied to Veluera's $10K/30-day profit goal. Return ONLY a JSON object with agent IDs as keys and task strings as values. Keys must be: ${staffAgents.map(a=>a.id).join(', ')}. No commentary — pure JSON.`,
           messages: [{ role: 'user', content: 'Run today\'s standup and assign tasks.' }]
