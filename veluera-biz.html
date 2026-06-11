@@ -2039,7 +2039,43 @@ async function cloudSave() {
   if (!_fbDb || !_fbUser) return;
   updateSyncBadge('syncing');
   try {
-    const payload = { data: JSON.stringify(data), updatedAt: Date.now(), uid: _fbUser.uid };
+    // Strip heavy content fields before syncing — agentDocs HTML can be 5KB+ each
+    // and will blow Firestore's 1MB document limit after a few generations.
+    // Full content stays in localStorage; cloud only holds metadata + business data.
+    const slim = { ...data };
+
+    // Keep agentDocs metadata only (no content HTML)
+    if (slim.agentDocs) {
+      slim.agentDocs = slim.agentDocs.slice(0, 100).map(d => ({
+        id: d.id, title: d.title, agentId: d.agentId, agentName: d.agentName,
+        agentEmoji: d.agentEmoji, agentColor: d.agentColor, category: d.category,
+        tag: d.tag, desc: d.desc, generatedAt: d.generatedAt, templateIdx: d.templateIdx,
+        taskId: d.taskId, aiGenerated: d.aiGenerated, assignedBy: d.assignedBy
+        // content intentionally excluded — stays in localStorage only
+      }));
+    }
+
+    // Don't sync API key to cloud — it's already in localStorage and data.anthropicApiKey
+    // is only used as a local fallback restore. Exclude from Firestore for security.
+    delete slim.anthropicApiKey;
+
+    // Truncate agent chat messages to last 30 per agent to stay lean
+    if (slim.agentMessages) {
+      const trimmed = {};
+      for (const [k, v] of Object.entries(slim.agentMessages)) {
+        trimmed[k] = Array.isArray(v) ? v.slice(-30) : v;
+      }
+      slim.agentMessages = trimmed;
+    }
+
+    const json = JSON.stringify(slim);
+    // Safety check — warn if still large (Firestore limit is ~1MB)
+    if (json.length > 900000) {
+      console.warn('Sync payload is very large:', json.length, 'bytes — trimming agentDocs further');
+      slim.agentDocs = (slim.agentDocs || []).slice(0, 20);
+    }
+
+    const payload = { data: JSON.stringify(slim), updatedAt: Date.now(), uid: _fbUser.uid };
     await _fbDb.collection(VELUERA_COLLECTION).doc(_fbUser.uid).set(payload);
     updateSyncBadge('synced');
   } catch(e) {
@@ -2058,9 +2094,28 @@ async function cloudLoad() {
       const localUpdated = data.updatedAt || 0;
       const cloudUpdated = snap.data().updatedAt || 0;
       if (cloudUpdated > localUpdated) {
-        data = { ...data, ...cloudData };
+        // Preserve local agentDocs content — cloud only has metadata (no HTML content).
+        // Merge: keep local docs that have content; add any cloud-only doc metadata.
+        const localDocs = data.agentDocs || [];
+        const cloudDocs = cloudData.agentDocs || [];
+        const localIds = new Set(localDocs.map(d => d.id));
+        // Only bring in cloud doc entries we don't already have locally
+        const newFromCloud = cloudDocs.filter(d => !localIds.has(d.id));
+        const mergedDocs = [...localDocs, ...newFromCloud]
+          .sort((a, b) => (b.id || 0) - (a.id || 0));
+
+        // Preserve local API key — never let cloud overwrite it
+        const savedKey = data.anthropicApiKey || localStorage.getItem('veluera_anthropic_key');
+
+        data = { ...data, ...cloudData, agentDocs: mergedDocs };
+
+        // Restore API key after merge
+        if (savedKey) {
+          data.anthropicApiKey = savedKey;
+          localStorage.setItem('veluera_anthropic_key', savedKey);
+        }
+
         localStorage.setItem(KEY, JSON.stringify(data));
-        // Re-render everything
         renderDocIndex();
         renderAgentDocGrid();
         if (typeof renderPlatforms === 'function') renderPlatforms();
