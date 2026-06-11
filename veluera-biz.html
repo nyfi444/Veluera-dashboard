@@ -3440,7 +3440,7 @@ window.sendModalMsg = async function() {
         model: 'claude-sonnet-4-5',
         max_tokens: wantsDoc ? 4096 : 1024,
         system: agent.persona + docInstructions + '\n\nIMPORTANT STYLE RULES: Never use emojis. No colored text references. Write in a clean, professional, editorial tone.',
-        messages: modalMsgs
+        messages: modalMsgs.map(m => ({ role: m.role, content: m.content }))
       })
     });
 
