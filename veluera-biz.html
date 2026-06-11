@@ -1973,6 +1973,14 @@ a{color:inherit;text-decoration:none;}
 const KEY = "veluera_biz_v1";
 let data = load();
 
+// Immediately restore API key from cloud-synced data if localStorage was cleared
+(function restoreApiKey() {
+  const VKEY = 'veluera_anthropic_key';
+  if (!localStorage.getItem(VKEY) && data.anthropicApiKey) {
+    localStorage.setItem(VKEY, data.anthropicApiKey);
+  }
+})();
+
 function load() {
   try { return JSON.parse(localStorage.getItem(KEY)) || { entries: [], orders: [] }; }
   catch { return { entries: [], orders: [] }; }
@@ -3038,15 +3046,32 @@ let modalAgentId = null;
 let modalMsgs = []; // [{role:'user'|'assistant', content:'...'}]
 let modalStreaming = false;
 
-function getApiKey() { return localStorage.getItem(VELUERA_API_KEY) || ''; }
+function getApiKey() {
+  // Check localStorage first, then fall back to data object (cloud-synced)
+  const lsKey = localStorage.getItem(VELUERA_API_KEY);
+  if (lsKey) return lsKey;
+  if (data.anthropicApiKey) {
+    // Restore to localStorage from cloud backup
+    localStorage.setItem(VELUERA_API_KEY, data.anthropicApiKey);
+    return data.anthropicApiKey;
+  }
+  return '';
+}
 
 window.saveApiKey = function() {
   const val = document.getElementById('am-key-input')?.value.trim();
   if (val) {
+    // Save in both localStorage AND data object so it survives cache clears
     localStorage.setItem(VELUERA_API_KEY, val);
-    document.getElementById('am-key-row').style.display = 'none';
+    data.anthropicApiKey = val;
+    save(); // syncs to Firebase too
+    const row = document.getElementById('am-key-row');
+    if (row) row.style.display = 'none';
+    // Update API Key button to show it's set
+    const btn = document.getElementById('am-key-toggle');
+    if (btn) { btn.textContent = '✓ Key Set'; btn.style.color = 'rgba(76,175,122,.7)'; btn.style.borderColor = 'rgba(76,175,122,.2)'; }
     renderModalMessages();
-    showToast('✓ API key saved — your agents are now live');
+    showToast('✓ API key locked in — never asking again');
   }
 };
 
@@ -3151,12 +3176,26 @@ function renderModalMessages(agent) {
   if (!container) return;
   const apiKey = getApiKey();
 
+  // Update API Key button state
+  const keyBtn = document.getElementById('am-key-toggle');
+  if (keyBtn) {
+    if (apiKey) {
+      keyBtn.textContent = '✓ Key Set';
+      keyBtn.style.color = 'rgba(76,175,122,.7)';
+      keyBtn.style.borderColor = 'rgba(76,175,122,.2)';
+    } else {
+      keyBtn.textContent = 'API Key';
+      keyBtn.style.color = '';
+      keyBtn.style.borderColor = '';
+    }
+  }
+
   if (!apiKey) {
     container.innerHTML = `
       <div class="am-no-key">
         <div class="am-no-key-icon">🔑</div>
         <div class="am-no-key-title">Connect your API key</div>
-        <div class="am-no-key-text">Add your Anthropic API key to unlock real AI conversations with every Veluera agent. Your key is stored locally — never shared.</div>
+        <div class="am-no-key-text">Add your Anthropic API key to unlock real AI conversations with every Veluera agent. Your key is stored locally and backed up — you only need to do this once.</div>
         <button onclick="toggleApiKeyInput()" style="padding:10px 24px;border-radius:10px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.1);color:rgba(201,168,76,.9);font-size:13px;cursor:pointer;margin-top:8px;">Add API Key →</button>
       </div>`;
     return;
