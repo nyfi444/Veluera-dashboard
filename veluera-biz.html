@@ -3287,17 +3287,22 @@ function renderModalMessages(agent) {
     container.appendChild(div);
   }
 
-  modalMsgs.forEach(m => {
+  modalMsgs.forEach((m, idx) => {
     const wrap = document.createElement('div');
     if (m.role === 'user') {
       wrap.innerHTML = `<div class="am-msg-user">${m.content.replace(/\n/g,'<br>')}</div>`;
     } else {
+      const docChip = m.savedDocId
+        ? `<div style="margin-top:10px;"><span onclick="openAgentDoc(${m.savedDocId})" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(76,175,122,.12);border:1px solid rgba(76,175,122,.3);color:var(--green);font-size:11px;cursor:pointer;letter-spacing:.5px;">✓ Saved to Documents — click to read ↗</span></div>`
+        : (m.role === 'assistant' && m.content.length > 300
+            ? `<div style="margin-top:8px;"><button onclick="saveReplyAsDoc(${idx})" style="padding:4px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.3);font-size:10px;cursor:pointer;letter-spacing:.5px;">+ Save as Document</button></div>`
+            : '');
       wrap.innerHTML = `
         <div class="am-agent-label">
           <span style="font-size:14px;">${currentAgent?.emoji||'✦'}</span>
           <span class="am-agent-label-name">${currentAgent?.name||'Agent'}</span>
         </div>
-        <div class="am-msg-agent">${formatAgentText(m.content)}</div>`;
+        <div class="am-msg-agent">${formatAgentText(m.content)}${docChip}</div>`;
     }
     container.appendChild(wrap);
   });
@@ -3314,6 +3319,83 @@ function formatAgentText(text) {
     .replace(/\n/g, '<br>');
 }
 
+// Detect if user wants a document saved
+function isDocRequest(text) {
+  const t = text.toLowerCase();
+  return /put.*(in|into|to).*(doc|document|docs|file|report)|save.*(as|to|in).*(doc|document|file|report)|make.*(a|me|the|my).*(doc|document|report|plan|guide|brief|strategy|analysis|breakdown|summary|proposal)|write.*(a|me|the|my).*(doc|document|report|plan|guide|brief|strategy|analysis|breakdown|summary|proposal|full|complete|detailed)|create.*(a|me|the|my).*(doc|document|report|plan|guide|brief|strategy|analysis)|add.*(to|in).*(doc|document|docs)|revise.*(and|the).*(doc|document|plan|report|brief)|(update|improve|rewrite|enhance|redo|rebuild).*(doc|document|plan|business plan|report|brief)|draft.*(a|me|the|my)|(full|complete|detailed).*(version|plan|report|analysis|breakdown)/.test(t);
+}
+
+// Extract a short title from the user's request
+function extractDocTitle(text, agentName) {
+  const t = text.trim();
+  // Try to pull a meaningful noun phrase
+  const m = t.match(/(?:make|create|write|draft|build|revise|update|improve|rewrite)\s+(?:a\s+|me\s+a\s+|the\s+|my\s+)?(.{4,60}?)(?:\s+(?:and|for|to|that)\s|$)/i);
+  if (m) return m[1].charAt(0).toUpperCase() + m[1].slice(1);
+  return `${agentName} — ${t.slice(0, 50)}${t.length > 50 ? '…' : ''}`;
+}
+
+// Wrap plain text / markdown reply into styled document HTML
+function wrapAsDocHTML(reply, agent, title, ts) {
+  const body = reply
+    .replace(/^#{1,6}\s+(.+)$/gm, (_, h) => `<h2>${h}</h2>`)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, `<code style="background:rgba(201,168,76,.1);padding:2px 6px;border-radius:4px;font-size:12px;color:#C9A84C;">$1</code>`)
+    .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, s => `<ul>${s}</ul>`)
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+
+  return `<div style="font-family:'Inter',sans-serif;color:#f0ede8;background:#111;padding:40px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid #2e2e2e;">
+    <div style="font-size:36px;">${agent.emoji}</div>
+    <div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:${agent.color};letter-spacing:1.5px;">${title}</div>
+      <div style="font-size:11px;color:#888;letter-spacing:1.5px;margin-top:6px;text-transform:uppercase;">${agent.name} · ${agent.role} · ${ts}</div>
+    </div>
+  </div>
+  <div style="font-size:13px;line-height:1.9;color:#d4cfc8;"><p>${body}</p></div>
+</div>`;
+}
+
+window.saveReplyAsDoc = function(msgIdx) {
+  const agent = AGENTS.find(a => a.id === modalAgentId);
+  if (!agent) return;
+  const msg = modalMsgs[msgIdx];
+  if (!msg) return;
+
+  // Find the user prompt that preceded this reply
+  const userMsg = modalMsgs[msgIdx - 1]?.content || '';
+  const title = extractDocTitle(userMsg, agent.name);
+  const ts = new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  const content = wrapAsDocHTML(msg.content, agent, title, ts);
+
+  const doc = {
+    id: Date.now(),
+    title,
+    agentId: agent.id,
+    agentName: agent.name,
+    agentEmoji: agent.emoji,
+    agentColor: agent.color,
+    category: agent.role.split(' ')[0],
+    tag: 'Agent Deliverable',
+    desc: `Created by ${agent.name} from chat on ${ts}`,
+    generatedAt: ts,
+    content,
+    aiGenerated: true,
+    isNew: true
+  };
+
+  data.agentDocs.unshift(doc);
+  save();
+  renderAgentDocGrid();
+  addActivityItem(agent.emoji, agent.color, agent.name, `Saved document: "${title}"`);
+  showToast(`✓ Saved to Documents — "${title}"`);
+
+  // Update that message bubble to show saved state
+  renderModalMessages(agent);
+};
+
 window.sendModalMsg = async function() {
   if (modalStreaming) return;
   const inp = document.getElementById('am-input');
@@ -3326,6 +3408,9 @@ window.sendModalMsg = async function() {
   const agent = AGENTS.find(a => a.id === modalAgentId);
   if (!agent) return;
 
+  const wantsDoc = isDocRequest(text);
+  const docTitle = wantsDoc ? extractDocTitle(text, agent.name) : null;
+
   inp.value = '';
   modalMsgs.push({ role: 'user', content: text });
   renderModalMessages(agent);
@@ -3334,9 +3419,14 @@ window.sendModalMsg = async function() {
   const typing = document.getElementById('am-typing');
   if (typing) {
     typing.style.display = 'block';
-    typing.innerHTML = `<span style="opacity:.5;font-size:11px;letter-spacing:.5px;">${agent.emoji} ${agent.name} is thinking</span> <span class="am-typing-dots"><span></span><span></span><span></span></span>`;
+    typing.innerHTML = `<span style="opacity:.5;font-size:11px;letter-spacing:.5px;">${agent.emoji} ${agent.name} ${wantsDoc ? 'is writing your document' : 'is thinking'}</span> <span class="am-typing-dots"><span></span><span></span><span></span></span>`;
   }
   modalStreaming = true;
+
+  // Build system prompt — richer instructions when a document is requested
+  const docInstructions = wantsDoc
+    ? `\n\nIMPORTANT: The user is asking you to produce a DOCUMENT. Write a complete, detailed, professional deliverable — not a summary or plan, but the full actual output. Use markdown: ## headings, bullet points, tables, bold key terms. Be specific, include real examples, numbers, copy, or frameworks. Minimum 600 words. This will be saved directly into Veluera's document library.`
+    : '';
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -3349,8 +3439,8 @@ window.sendModalMsg = async function() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1024,
-        system: agent.persona,
+        max_tokens: wantsDoc ? 4096 : 1024,
+        system: agent.persona + docInstructions,
         messages: modalMsgs
       })
     });
@@ -3362,10 +3452,38 @@ window.sendModalMsg = async function() {
 
     const json = await res.json();
     const reply = json.content?.[0]?.text || '';
+    const replyIdx = modalMsgs.length;
+    modalMsgs.push({ role: 'assistant', content: reply, isDoc: wantsDoc, docTitle });
 
-    modalMsgs.push({ role: 'assistant', content: reply });
+    // Auto-save to Documents if it was a doc request
+    if (wantsDoc) {
+      const ts = new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      const content = wrapAsDocHTML(reply, agent, docTitle, ts);
+      const doc = {
+        id: Date.now(),
+        title: docTitle,
+        agentId: agent.id,
+        agentName: agent.name,
+        agentEmoji: agent.emoji,
+        agentColor: agent.color,
+        category: agent.role.split(' ')[0],
+        tag: 'Agent Deliverable',
+        desc: `Created by ${agent.name} from chat on ${ts}`,
+        generatedAt: ts,
+        content,
+        aiGenerated: true,
+        isNew: true,
+        chatMsgIdx: replyIdx
+      };
+      data.agentDocs.unshift(doc);
+      addActivityItem(agent.emoji, agent.color, agent.name, `Document saved: "${docTitle}"`);
+      // Tag message with the doc id so we can link to it
+      modalMsgs[replyIdx].savedDocId = doc.id;
+      renderAgentDocGrid();
+      save();
+    }
 
-    // Persist to data
+    // Persist chat
     if (!data.agentMessages[agent.id]) data.agentMessages[agent.id] = [];
     data.agentMessages[agent.id] = modalMsgs.map(m => ({
       from: m.role === 'user' ? 'user' : 'agent',
