@@ -5478,10 +5478,10 @@ let sessionDocCount = 0; // how many docs generated this session
 
 // Track which templates delivered this session + daily cap
 const sessionDelivered = new Set(data.agentDocs.slice(0, 4).map(d => d.templateIdx));
-const todayKey = new Date().toISOString().slice(0,10);
+const todayKeyStr = new Date().toISOString().slice(0,10);
 
 function docsGeneratedToday() {
-  return (data.agentDocs || []).filter(d => (d.generatedAt || '').startsWith(todayKey.slice(0,7))).length;
+  return (data.agentDocs || []).filter(d => (d.generatedAt || '').startsWith(todayKeyStr.slice(0,7))).length;
 }
 
 function getRemainingTemplates() {
