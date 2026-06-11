@@ -1906,6 +1906,18 @@ a{color:inherit;text-decoration:none;}
       <button onclick="saveApiKey()" style="padding:6px 14px;border-radius:8px;border:none;background:rgba(201,168,76,.2);color:rgba(201,168,76,.9);font-size:12px;cursor:pointer;letter-spacing:.5px;">Save</button>
       <span style="font-size:10px;color:rgba(255,255,255,.25);">Stored locally in browser only.</span>
     </div>
+    <!-- Director Delegation Panel (only visible when Director is open) -->
+    <div id="am-director-panel" style="display:none;padding:10px 24px;background:rgba(201,168,76,.04);border-bottom:1px solid rgba(201,168,76,.12);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(201,168,76,.6);white-space:nowrap;">Delegate to</span>
+        <select id="am-delegate-agent" style="flex:1;min-width:130px;padding:5px 10px;border-radius:8px;border:1px solid rgba(201,168,76,.2);background:rgba(0,0,0,.4);color:#f0ede8;font-size:12px;cursor:pointer;outline:none;">
+          <option value="">— pick agent —</option>
+        </select>
+        <input id="am-delegate-task" type="text" placeholder="Describe the task to assign…" style="flex:3;min-width:180px;padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#f0ede8;font-size:12px;outline:none;" onkeydown="if(event.key==='Enter')directorDelegate()" />
+        <button onclick="directorDelegate()" style="padding:5px 14px;border-radius:8px;border:none;background:rgba(201,168,76,.18);color:rgba(201,168,76,.9);font-size:12px;cursor:pointer;letter-spacing:.5px;white-space:nowrap;">Assign ↗</button>
+        <button onclick="directorStandup()" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(201,168,76,.2);background:transparent;color:rgba(201,168,76,.6);font-size:11px;cursor:pointer;letter-spacing:.5px;white-space:nowrap;" title="Director assigns tasks to every agent for today">⟳ Daily Standup</button>
+      </div>
+    </div>
     <!-- Quick prompts -->
     <div id="am-prompts" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;"></div>
     <!-- Chat messages -->
@@ -3068,6 +3080,26 @@ window.openAgentModal = function(agentId, prefillText) {
   document.getElementById('am-prompts').innerHTML = agent.prompts.map(p =>
     `<span class="am-qprompt" onclick="sendModalPrompt('${p.replace(/'/g,"&#39;")}')">${p}</span>`
   ).join('');
+
+  // Show/hide Director delegation panel
+  const dirPanel = document.getElementById('am-director-panel');
+  if (dirPanel) {
+    if (agentId === 'director') {
+      dirPanel.style.display = 'block';
+      // Populate agent dropdown (exclude director)
+      const sel = document.getElementById('am-delegate-agent');
+      if (sel && sel.options.length <= 1) {
+        AGENTS.filter(a => a.id !== 'director').forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = `${a.emoji} ${a.name}`;
+          sel.appendChild(opt);
+        });
+      }
+    } else {
+      dirPanel.style.display = 'none';
+    }
+  }
 
   // Show modal
   document.getElementById('agent-modal').style.display = 'block';
@@ -5817,6 +5849,215 @@ function generateTemplateTaskDoc(task, agent) {
   renderAgentDocGrid();
   showToast(`✓ ${agent.name} logged task — connect API key to auto-complete`);
 }
+
+// ── DIRECTOR DELEGATION ──
+
+window.directorDelegate = async function() {
+  const agentSel = document.getElementById('am-delegate-agent');
+  const taskInp = document.getElementById('am-delegate-task');
+  const agentId = agentSel?.value;
+  const taskText = taskInp?.value.trim();
+
+  if (!agentId) {
+    if (agentSel) { agentSel.style.outline = '2px solid var(--red)'; setTimeout(() => agentSel.style.outline = '', 1200); }
+    return;
+  }
+  if (!taskText) {
+    if (taskInp) { taskInp.style.borderColor = 'var(--red)'; setTimeout(() => taskInp.style.borderColor = '', 1200); }
+    return;
+  }
+
+  const targetAgent = AGENTS.find(a => a.id === agentId);
+  if (!targetAgent) return;
+
+  // If API key, have The Director formulate the task formally first
+  const apiKey = getApiKey();
+  let finalTask = taskText;
+
+  if (apiKey) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 200,
+          system: `You are The Director, Chief of Staff for Veluera. Rewrite the following task directive as a concise, authoritative one-sentence assignment you are sending to ${targetAgent.name} (${targetAgent.role}). Be specific, professional, and action-oriented. Return only the assignment sentence — no preamble.`,
+          messages: [{ role: 'user', content: taskText }]
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        finalTask = json.content?.[0]?.text?.trim() || taskText;
+      }
+    } catch(_) { /* use original text */ }
+  }
+
+  // Log to Director's chat
+  modalMsgs.push({ role: 'user', content: `[Delegating to ${targetAgent.name}] ${taskText}` });
+  modalMsgs.push({ role: 'assistant', content: `Understood. I'm assigning ${targetAgent.name} the following: **"${finalTask}"** — they'll deliver a document when complete. I've updated today's brief.` });
+  renderModalMessages(AGENTS.find(a => a.id === 'director'));
+
+  // Persist director chat
+  if (!data.agentMessages['director']) data.agentMessages['director'] = [];
+  data.agentMessages['director'] = modalMsgs.map(m => ({ from: m.role === 'user' ? 'user' : 'agent', text: m.content }));
+
+  // Create the task
+  const task = {
+    id: Date.now(),
+    date: todayKey(),
+    agentId: targetAgent.id,
+    agentName: targetAgent.name,
+    agentEmoji: targetAgent.emoji,
+    agentColor: targetAgent.color,
+    description: finalTask,
+    status: 'in-progress',
+    assignedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+    assignedBy: 'director',
+    docId: null
+  };
+
+  data.assignedTasks.unshift(task);
+  save();
+
+  // Clear inputs
+  if (taskInp) taskInp.value = '';
+  if (agentSel) agentSel.value = '';
+
+  showToast(`👑 Director assigned task to ${targetAgent.name}`);
+  generateDirectorDailyBrief();
+  scheduleAgentTaskDoc(task);
+};
+
+// ── DIRECTOR DAILY STANDUP ──
+
+window.directorStandup = async function() {
+  const apiKey = getApiKey();
+  const btn = document.querySelector('[onclick="directorStandup()"]');
+  if (btn) { btn.textContent = '⟳ Running…'; btn.disabled = true; }
+
+  const staffAgents = AGENTS.filter(a => a.id !== 'director');
+
+  // Default standup tasks per agent role if no API
+  const defaultTasks = {
+    maya:  'Audit current Meta & TikTok ad performance, identify the top-performing creative, and propose 3 variations to test this week.',
+    kai:   'Write 5 TikTok hook scripts for The Cloud Boneless Sectional optimized for the luxury home decor niche.',
+    nova:  'Review Veluera brand voice consistency across the storefront and flag any pages that need tone corrections.',
+    zara:  'Research 3 new high-margin SKUs in the luxury seating category with supplier availability on CJ Dropshipping.',
+    eli:   'Draft a 3-email win-back sequence for customers who browsed but did not purchase in the last 14 days.',
+    sage:  'Update customer service response scripts to address the top 5 most common pre-purchase questions.',
+    rex:   'Build a weekly P&L snapshot for Veluera showing ad spend, revenue, gross margin, and net profit trend.',
+    lux:   'Identify 10 micro-influencers (50K–500K followers) in the luxury home and lifestyle niche for outreach.',
+    atlas: 'Run a chargeback risk assessment for the current product catalog and recommend risk mitigation steps.',
+    lex:   'Review the Veluera refund policy and terms of service for compliance gaps and recommend updates.',
+    finn:  'Audit SEO title tags and meta descriptions for the top 10 product pages and suggest optimized versions.',
+    piper: 'Plan this week\'s Pinterest content calendar with 7 pins mapped to hero products.',
+    grant: 'Outline a Google Shopping campaign structure for the top 5 Veluera hero products.',
+    eden:  'Rewrite 3 product descriptions in Veluera\'s luxury editorial voice — The Cloud, The Velvet Throne, The Haven.',
+    cj:    'Document the CJ Dropshipping order fulfillment SOP with supplier escalation steps and timeline expectations.'
+  };
+
+  if (apiKey) {
+    try {
+      const agentList = staffAgents.map(a => `${a.emoji} ${a.name} (${a.role})`).join(', ');
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 1200,
+          system: `You are The Director, Chief of Staff for Veluera luxury furniture. Today is ${todayLabel()}. Your team: ${agentList}. Assign each agent exactly one specific, high-priority task for today tied to Veluera's $10K/30-day profit goal. Return ONLY a JSON object with agent IDs as keys and task strings as values. Keys must be: ${staffAgents.map(a=>a.id).join(', ')}. No commentary — pure JSON.`,
+          messages: [{ role: 'user', content: 'Run today\'s standup and assign tasks.' }]
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const raw = json.content?.[0]?.text || '';
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) {
+          const assignments = JSON.parse(match[0]);
+          let count = 0;
+          for (const agent of staffAgents) {
+            const taskText = assignments[agent.id];
+            if (!taskText) continue;
+            const task = {
+              id: Date.now() + count,
+              date: todayKey(),
+              agentId: agent.id,
+              agentName: agent.name,
+              agentEmoji: agent.emoji,
+              agentColor: agent.color,
+              description: taskText,
+              status: 'in-progress',
+              assignedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+              assignedBy: 'director',
+              docId: null
+            };
+            data.assignedTasks.unshift(task);
+            scheduleAgentTaskDoc(task);
+            count++;
+          }
+          save();
+          generateDirectorDailyBrief();
+
+          // Log to Director chat
+          modalMsgs.push({ role: 'user', content: '[Run daily standup]' });
+          modalMsgs.push({ role: 'assistant', content: `Standup complete. I've assigned ${count} tasks across the team — each agent is now working on their deliverable. Check the Documents section as they complete their work. Today's brief has been updated.` });
+          if (!data.agentMessages['director']) data.agentMessages['director'] = [];
+          data.agentMessages['director'] = modalMsgs.map(m => ({ from: m.role === 'user' ? 'user' : 'agent', text: m.content }));
+          renderModalMessages(AGENTS.find(a => a.id === 'director'));
+
+          showToast(`👑 Standup complete — ${count} tasks assigned across the team`);
+          if (btn) { btn.textContent = '⟳ Daily Standup'; btn.disabled = false; }
+          return;
+        }
+      }
+    } catch(_) { /* fall through to defaults */ }
+  }
+
+  // Default tasks (no API or parse failure)
+  let count = 0;
+  for (const agent of staffAgents) {
+    const taskText = defaultTasks[agent.id];
+    if (!taskText) continue;
+    const task = {
+      id: Date.now() + count,
+      date: todayKey(),
+      agentId: agent.id,
+      agentName: agent.name,
+      agentEmoji: agent.emoji,
+      agentColor: agent.color,
+      description: taskText,
+      status: 'in-progress',
+      assignedAt: new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+      assignedBy: 'director',
+      docId: null
+    };
+    data.assignedTasks.unshift(task);
+    count++;
+  }
+  save();
+  generateDirectorDailyBrief();
+
+  modalMsgs.push({ role: 'user', content: '[Run daily standup]' });
+  modalMsgs.push({ role: 'assistant', content: `Standup complete. ${count} tasks assigned across the team. Connect your API key so I can tailor each assignment to today's priorities. Today's brief is updated in Documents.` });
+  if (!data.agentMessages['director']) data.agentMessages['director'] = [];
+  data.agentMessages['director'] = modalMsgs.map(m => ({ from: m.role === 'user' ? 'user' : 'agent', text: m.content }));
+  renderModalMessages(AGENTS.find(a => a.id === 'director'));
+
+  showToast(`👑 Standup complete — ${count} tasks assigned`);
+  if (btn) { btn.textContent = '⟳ Daily Standup'; btn.disabled = false; }
+};
 
 // On load: regenerate Director brief if tasks exist for today
 (function initTaskSystem() {
