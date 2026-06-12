@@ -817,6 +817,15 @@ a{color:inherit;text-decoration:none;}
   background:rgba(255,255,255,.02);
 }
 .doc-viewer-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);}
+.doc-title-edit{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--gold-dk);border-radius:6px;padding:4px 10px;outline:none;width:100%;max-width:500px;}
+.doc-body-editor{font-size:13px;color:rgba(255,255,255,.7);line-height:1.9;min-height:300px;outline:none;padding:4px 0;}
+.doc-body-editor:focus{outline:none;}
+.doc-edit-toolbar{display:flex;gap:6px;padding:8px 40px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.015);flex-wrap:wrap;align-items:center;}
+.doc-edit-toolbar button{font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.3px;}
+.doc-edit-toolbar button:hover{border-color:var(--gold-dk);color:var(--gold);}
+.doc-edit-toolbar button.active{background:rgba(201,168,76,.12);border-color:var(--gold-dk);color:var(--gold);}
+.doc-edit-save-bar{display:flex;gap:8px;padding:10px 40px;border-top:1px solid var(--border);background:rgba(255,255,255,.02);align-items:center;}
+
 .doc-viewer-body{padding:32px 40px;max-height:72vh;overflow-y:auto;}
 .doc-viewer-body h1{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--text);margin-bottom:6px;letter-spacing:.3px;}
 .doc-viewer-body .doc-subtitle{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.07);}
@@ -2813,6 +2822,19 @@ const AGENTS = [
     prompts: ['Compare CJ vs Spocket for luxury furniture', 'Find me high-margin sofa suppliers', 'What should I look for in a supplier contract?', 'Rate my current CJ supplier', 'Best US-based dropship furniture suppliers'],
     persona: `You are Scout, Veluera's AI Supplier Analyst. Your job is to research, vet, and compare suppliers for luxury furniture dropshipping. You specialize in evaluating CJ Dropshipping, Spocket, Zendrop, Faire, and private manufacturer sourcing options. You analyze: product quality signals (photos, reviews, return rates), shipping times (especially US warehouse availability), margin potential (target 35–45% net), supplier reliability scores, MOQ requirements, and contract terms. You help Nyla decide WHICH suppliers to use, WHICH products to add to Veluera's catalog, and HOW to negotiate better terms. You also flag risks — counterfeit concerns, fragile shipping categories, high chargeback risk items — and recommend alternatives. You speak clearly, compare options in tables, and always tie recommendations to Veluera's luxury brand standards and profitability targets.`,
     messages: [{ from:'agent', text:'<strong>Scout here.</strong> I\'m your supplier intelligence unit — I find, vet, and rank suppliers so you\'re never locked into a bad deal.<br><br>For Veluera\'s luxury positioning, I\'m evaluating suppliers on 5 criteria:<br>🏆 <strong>Product quality</strong> — does it look $1,200+ worthy?<br>📦 <strong>US warehouse availability</strong> — 3-7 day shipping vs 15-25 days<br>💰 <strong>Margin</strong> — can we clear 35-45% net after ads?<br>⭐ <strong>Supplier reliability</strong> — order accuracy, response time, dispute history<br>📄 <strong>Contract terms</strong> — return policy, damage claims, exclusivity<br><br>What do you want me to analyze first — your current CJ supplier, alternatives, or new product categories?' }]
+  },
+  {
+    id: 'pixel',
+    name: 'Pixel',
+    emoji: '🖥️',
+    role: 'Website Specialist',
+    color: '#5BC8E0',
+    bg: 'rgba(91,200,224,.12)',
+    status: 'working',
+    task: 'Auditing and optimizing Veluera\'s Shopify storefront for conversion, speed, and luxury brand presentation',
+    prompts: ['Audit my Shopify homepage', 'Write copy for The Cloud product page', 'How do I improve my conversion rate?', 'What apps should I install?', 'Review my checkout flow'],
+    persona: `You are Pixel, Veluera's AI Website Specialist. You are an expert in Shopify storefronts, luxury e-commerce UX, conversion rate optimization (CRO), and premium brand presentation online. You help Nyla build a Veluera website that looks like RH or Restoration Hardware — editorial, minimal, confidence-inspiring. Your expertise covers: Shopify theme customization (Dawn, Prestige, Impulse), product page copywriting for high-ticket items ($800–$2,500), homepage hierarchy and hero sections, mobile-first design, site speed optimization, app stack recommendations, checkout flow, trust signals (reviews, guarantees, photography standards), and SEO for luxury furniture keywords. You review page layouts, write conversion-focused copy, suggest UX improvements with specific action steps, and flag anything that looks cheap, cluttered, or off-brand. You always tie recommendations to Veluera's goal of appearing as a premium, curated furniture brand that justifies premium prices. Speak with confidence, be specific, and give real Shopify implementation steps.`,
+    messages: [{ from:'agent', text:'<strong>Pixel here.</strong> I own the website — every pixel, every word, every flow that a customer sees before they buy.<br><br>For Veluera to convert at luxury prices, your site needs to do three things instantly:<br>✦ <strong>Signal premium</strong> — typography, whitespace, photography standard<br>✦ <strong>Build confidence</strong> — trust signals, social proof, guarantee placement<br>✦ <strong>Remove friction</strong> — fast load, clear CTA, clean checkout<br><br>I can audit any page, write product copy, recommend apps, or walk you through specific Shopify customizations. Where do you want to start — homepage, product page, or overall conversion audit?' }]
   }
 ];
 
@@ -3329,10 +3351,35 @@ function isDocRequest(text) {
 // Extract a short title from the user's request
 function extractDocTitle(text, agentName) {
   const t = text.trim();
-  // Try to pull a meaningful noun phrase
   const m = t.match(/(?:make|create|write|draft|build|revise|update|improve|rewrite)\s+(?:a\s+|me\s+a\s+|the\s+|my\s+)?(.{4,60}?)(?:\s+(?:and|for|to|that)\s|$)/i);
   if (m) return m[1].charAt(0).toUpperCase() + m[1].slice(1);
   return `${agentName} — ${t.slice(0, 50)}${t.length > 50 ? '…' : ''}`;
+}
+
+async function generateDocTitle(userPrompt, docContent, agentName, apiKey) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 40,
+        system: 'You are a professional document titler. Given a user request and the document content, return ONLY a concise, professional document title — 3 to 8 words, title case, no punctuation, no quotes. Nothing else.',
+        messages: [{ role: 'user', content: `User request: "${userPrompt}"\n\nDocument preview: ${docContent.slice(0, 300)}` }]
+      })
+    });
+    if (res.ok) {
+      const j = await res.json();
+      const t = j.content?.[0]?.text?.trim().replace(/["""'']/g, '');
+      if (t && t.length < 80) return t;
+    }
+  } catch(_) {}
+  return extractDocTitle(userPrompt, agentName);
 }
 
 // Wrap plain text / markdown reply into styled document HTML
@@ -3408,7 +3455,6 @@ window.sendModalMsg = async function() {
   if (!agent) return;
 
   const wantsDoc = isDocRequest(text);
-  const docTitle = wantsDoc ? extractDocTitle(text, agent.name) : null;
 
   inp.value = '';
   modalMsgs.push({ role: 'user', content: text });
@@ -3457,6 +3503,7 @@ window.sendModalMsg = async function() {
     // Auto-save to Documents if it was a doc request
     if (wantsDoc) {
       const ts = new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      const docTitle = await generateDocTitle(text, reply, agent.name, apiKey);
       const content = wrapAsDocHTML(reply, agent, docTitle, ts);
       const doc = {
         id: Date.now(),
@@ -5770,7 +5817,8 @@ function renderAgentDocGrid() {
         </div>
         ${collabs ? `<div style="display:flex;gap:2px;margin-left:4px;">${collabs}</div>` : ''}
         <div class="agent-doc-time">${doc.generatedAt}</div>
-        <button onclick="event.stopPropagation();downloadAgentDoc(${doc.id})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">⬇</button>
+        <button onclick="event.stopPropagation();openAgentDoc(${doc.id},true)" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;" title="Edit">✎</button>
+        <button onclick="event.stopPropagation();downloadAgentDoc(${doc.id})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;" title="Download">⬇</button>
       </div>
     </div>`;
   }).join('') : `<div style="color:var(--muted);font-size:13px;padding:20px 0;">No documents in this category yet.</div>`;
@@ -5792,7 +5840,7 @@ window.downloadAgentDoc = function(id) {
   a.click();
 };
 
-window.openAgentDoc = function(id) {
+window.openAgentDoc = function(id, editMode) {
   const doc = data.agentDocs.find(d => d.id === id);
   if (!doc) return;
   doc.isNew = false;
@@ -5801,28 +5849,88 @@ window.openAgentDoc = function(id) {
   const idx = document.getElementById('docs-index');
   const viewer = document.getElementById('docs-viewer');
   if (idx) idx.style.display = 'none';
-  if (viewer) {
-    viewer.style.display = 'block';
-    viewer.innerHTML = `
-      <div class="doc-viewer">
-        <div class="doc-viewer-header">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:${doc.agentColor}22;border:2px solid ${doc.agentColor}44;display:flex;align-items:center;justify-content:center;font-size:16px;">${doc.agentEmoji}</div>
-            <div>
-              <div class="doc-viewer-title">${doc.title}</div>
-              <div style="font-size:11px;color:var(--muted);">Generated by ${doc.agentName} · ${doc.generatedAt}</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;">
-            <button class="back-btn" onclick="closeDoc()">← Back to Documents</button>
-            <button class="print-btn" onclick="downloadAgentDoc(${doc.id})">⬇ Save File</button>
-            <button class="print-btn" onclick="printAgentDoc(${doc.id})">Print / PDF</button>
+  if (!viewer) return;
+  viewer.style.display = 'block';
+
+  const editing = !!editMode;
+  viewer.innerHTML = `
+    <div class="doc-viewer">
+      <div class="doc-viewer-header">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+          <div style="width:36px;height:36px;border-radius:50%;background:${doc.agentColor}22;border:2px solid ${doc.agentColor}44;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${doc.agentEmoji}</div>
+          <div style="flex:1;min-width:0;">
+            ${editing
+              ? `<input id="doc-title-input" class="doc-title-edit" value="${doc.title.replace(/"/g,'&quot;')}" />`
+              : `<div class="doc-viewer-title">${doc.title}</div>`}
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Generated by ${doc.agentName} · ${doc.generatedAt}</div>
           </div>
         </div>
-        <div class="doc-viewer-body">${doc.content}</div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="back-btn" onclick="closeDoc()">← Back</button>
+          ${editing
+            ? `<button class="btn-gold" style="font-size:12px;padding:6px 14px;" onclick="saveDocEdits(${doc.id})">✓ Save</button>
+               <button class="print-btn" onclick="openAgentDoc(${doc.id})">✕ Cancel</button>`
+            : `<button class="print-btn" onclick="openAgentDoc(${doc.id}, true)">✎ Edit</button>
+               <button class="print-btn" onclick="downloadAgentDoc(${doc.id})">⬇ Save File</button>
+               <button class="print-btn" onclick="printAgentDoc(${doc.id})">Print / PDF</button>`}
+        </div>
       </div>
-    `;
+      ${editing ? `
+      <div class="doc-edit-toolbar">
+        <span style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-right:4px;">Format</span>
+        <button onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
+        <button onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
+        <button onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+        <button onclick="document.execCommand('insertUnorderedList')" title="Bullet list">• List</button>
+        <button onclick="document.execCommand('insertOrderedList')" title="Numbered list">1. List</button>
+        <button onclick="document.execCommand('formatBlock',false,'h2')" title="Heading">Heading</button>
+        <button onclick="document.execCommand('formatBlock',false,'p')" title="Paragraph">¶ Para</button>
+        <button onclick="document.execCommand('removeFormat')" title="Clear format">✕ Format</button>
+      </div>` : ''}
+      <div class="doc-viewer-body">
+        ${editing
+          ? `<div id="doc-body-editor" class="doc-body-editor" contenteditable="true">${doc.content}</div>`
+          : doc.content}
+      </div>
+    </div>
+  `;
+
+  if (editing) {
+    const titleInput = document.getElementById('doc-title-input');
+    if (titleInput) titleInput.focus();
+    // Toolbar button active state
+    const editor = document.getElementById('doc-body-editor');
+    if (editor) {
+      editor.addEventListener('keydown', e => {
+        if (e.key === 's' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveDocEdits(doc.id); }
+      });
+    }
   }
+};
+
+window.saveDocEdits = function(id) {
+  const doc = data.agentDocs.find(d => d.id === id);
+  if (!doc) return;
+  const titleInput = document.getElementById('doc-title-input');
+  const bodyEditor = document.getElementById('doc-body-editor');
+  if (titleInput) doc.title = titleInput.value.trim() || doc.title;
+  if (bodyEditor) {
+    // Re-wrap the edited body HTML into the doc template
+    const newBodyHtml = bodyEditor.innerHTML;
+    // Update the stored content — replace just the body portion inside the wrapper div
+    doc.content = doc.content.replace(
+      /(<div style="font-size:13px[^>]+>)[\s\S]*?(<\/div>\s*<\/div>\s*$)/,
+      `$1${newBodyHtml}$2`
+    );
+    // Fallback: if regex didn't match (e.g. custom doc), just store as full HTML
+    if (!doc.content.includes(newBodyHtml)) {
+      doc.content = newBodyHtml;
+    }
+  }
+  save();
+  renderAgentDocGrid();
+  showToast('✓ Document saved');
+  openAgentDoc(id);
 };
 
 window.printAgentDoc = function(id) {
